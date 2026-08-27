@@ -7312,7 +7312,6 @@ a.anchor-link {
                     processEnvironments: true
                 },
                 displayAlign: 'center',
-                messageStyle: 'none',
                 CommonHTML: {
                     linebreaks: {
                     automatic: true
@@ -7332,12 +7331,7 @@ a.anchor-link {
     if (!diagrams.length) {
       return;
     }
-    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.10.0/mermaid.esm.min.mjs")).default;
-    const elkUrl = "https://cdnjs.cloudflare.com/ajax/libs/mermaid-layout-elk/0.1.9/mermaid-layout-elk.esm.min.mjs";
-    if(elkUrl) {
-      const elkLayouts = (await import(elkUrl)).default;
-      mermaid.registerLayoutLoaders(elkLayouts);
-    }
+    const mermaid = (await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.7.0/mermaid.esm.min.mjs")).default;
     const parser = new DOMParser();
 
     mermaid.initialize({
@@ -7434,8 +7428,7 @@ a.anchor-link {
      * Post-process to ensure mermaid diagrams contain only valid SVG and XHTML.
      */
     function cleanMermaidSvg(svg) {
-      svg = svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
-      return `${SVG_XML_HEADER}${svg}`;
+      return svg.replace(RE_VOID_ELEMENT, replaceVoidElement);
     }
 
 
@@ -7461,285 +7454,6 @@ a.anchor-link {
       }
       return `<${tag} ${rest}>`;
     }
-
-
-  /**
-   * Named HTML entities with their decimal equivalent codes.
-   *
-   * @see https://www.w3.org/TR/WD-html40-970708/sgml/entities.html
-   * */
-  const HTML_ENTITIES = `<!ENTITY Aacute "&#193;">
-<!ENTITY aacute "&#225;">
-<!ENTITY Acirc "&#194;">
-<!ENTITY acirc "&#226;">
-<!ENTITY acute "&#180;">
-<!ENTITY AElig "&#198;">
-<!ENTITY aelig "&#230;">
-<!ENTITY Agrave "&#192;">
-<!ENTITY agrave "&#224;">
-<!ENTITY alefsym "&#8501;">
-<!ENTITY Alpha "&#913;">
-<!ENTITY alpha "&#945;">
-<!ENTITY amp "&#38;">
-<!ENTITY and "&#8869;">
-<!ENTITY ang "&#8736;">
-<!ENTITY Aring "&#197;">
-<!ENTITY aring "&#229;">
-<!ENTITY asymp "&#8776;">
-<!ENTITY Atilde "&#195;">
-<!ENTITY atilde "&#227;">
-<!ENTITY Auml "&#196;">
-<!ENTITY auml "&#228;">
-<!ENTITY bdquo "&#8222;">
-<!ENTITY Beta "&#914;">
-<!ENTITY beta "&#946;">
-<!ENTITY brvbar "&#166;">
-<!ENTITY bull "&#8226;">
-<!ENTITY cap "&#8745;">
-<!ENTITY Ccedil "&#199;">
-<!ENTITY ccedil "&#231;">
-<!ENTITY cedil "&#184;">
-<!ENTITY cent "&#162;">
-<!ENTITY Chi "&#935;">
-<!ENTITY chi "&#967;">
-<!ENTITY circ "&#710;">
-<!ENTITY clubs "&#9827;">
-<!ENTITY cong "&#8773;">
-<!ENTITY copy "&#169;">
-<!ENTITY crarr "&#8629;">
-<!ENTITY cup "&#8746;">
-<!ENTITY curren "&#164;">
-<!ENTITY dagger "&#8224;">
-<!ENTITY Dagger "&#8225;">
-<!ENTITY darr "&#8595;">
-<!ENTITY dArr "&#8659;">
-<!ENTITY deg "&#176;">
-<!ENTITY Delta "&#916;">
-<!ENTITY delta "&#948;">
-<!ENTITY diams "&#9830;">
-<!ENTITY divide "&#247;">
-<!ENTITY Eacute "&#201;">
-<!ENTITY eacute "&#233;">
-<!ENTITY Ecirc "&#202;">
-<!ENTITY ecirc "&#234;">
-<!ENTITY Egrave "&#200;">
-<!ENTITY egrave "&#232;">
-<!ENTITY empty "&#8709;">
-<!ENTITY emsp "&#8195;">
-<!ENTITY ensp "&#8194;">
-<!ENTITY epsilon "&#949;">
-<!ENTITY Epsilon "&#917;">
-<!ENTITY equiv "&#8801;">
-<!ENTITY Eta "&#919;">
-<!ENTITY eta "&#951;">
-<!ENTITY ETH "&#208;">
-<!ENTITY eth "&#240;">
-<!ENTITY Euml "&#203;">
-<!ENTITY euml "&#235;">
-<!ENTITY exist "&#8707;">
-<!ENTITY fnof "&#402;">
-<!ENTITY forall "&#8704;">
-<!ENTITY frac12 "&#189;">
-<!ENTITY frac14 "&#188;">
-<!ENTITY frac34 "&#190;">
-<!ENTITY frasl "&#8260;">
-<!ENTITY Gamma "&#915;">
-<!ENTITY gamma "&#947;">
-<!ENTITY ge "&#8805;">
-<!ENTITY gt "&#62;">
-<!ENTITY harr "&#8596;">
-<!ENTITY hArr "&#8660;">
-<!ENTITY hearts "&#9829;">
-<!ENTITY hellip "&#8230;">
-<!ENTITY Iacute "&#205;">
-<!ENTITY iacute "&#237;">
-<!ENTITY Icirc "&#206;">
-<!ENTITY icirc "&#238;">
-<!ENTITY iexcl "&#161;">
-<!ENTITY Igrave "&#204;">
-<!ENTITY igrave "&#236;">
-<!ENTITY image "&#8465;">
-<!ENTITY infin "&#8734;">
-<!ENTITY int "&#8747;">
-<!ENTITY Iota "&#921;">
-<!ENTITY iota "&#953;">
-<!ENTITY iquest "&#191;">
-<!ENTITY isin "&#8712;">
-<!ENTITY Iuml "&#207;">
-<!ENTITY iuml "&#239;">
-<!ENTITY Kappa "&#922;">
-<!ENTITY kappa "&#954;">
-<!ENTITY Lambda "&#923;">
-<!ENTITY lambda "&#955;">
-<!ENTITY lang "&#9001;">
-<!ENTITY laquo "&#171;">
-<!ENTITY larr "&#8592;">
-<!ENTITY lArr "&#8656;">
-<!ENTITY lceil "&#8968;">
-<!ENTITY ldquo "&#8220;">
-<!ENTITY le "&#8804;">
-<!ENTITY lfloor "&#8970;">
-<!ENTITY lowast "&#8727;">
-<!ENTITY loz "&#9674;">
-<!ENTITY lrm "&#8206;">
-<!ENTITY lsaquo "&#8249;">
-<!ENTITY lsquo "&#8216;">
-<!ENTITY lt "&#60;">
-<!ENTITY macr "&#175;">
-<!ENTITY mdash "&#8212;">
-<!ENTITY micro "&#181;">
-<!ENTITY middot "&#183;">
-<!ENTITY minus "&#8722;">
-<!ENTITY Mu "&#924;">
-<!ENTITY mu "&#956;">
-<!ENTITY nabla "&#8711;">
-<!ENTITY nbsp "&#160;">
-<!ENTITY ndash "&#8211;">
-<!ENTITY ne "&#8800;">
-<!ENTITY ni "&#8715;">
-<!ENTITY not "&#172;">
-<!ENTITY notin "&#8713;">
-<!ENTITY nsub "&#8836;">
-<!ENTITY Ntilde "&#209;">
-<!ENTITY ntilde "&#241;">
-<!ENTITY Nu "&#925;">
-<!ENTITY nu "&#957;">
-<!ENTITY Oacute "&#211;">
-<!ENTITY oacute "&#243;">
-<!ENTITY Ocirc "&#212;">
-<!ENTITY ocirc "&#244;">
-<!ENTITY OElig "&#338;">
-<!ENTITY oelig "&#339;">
-<!ENTITY Ograve "&#210;">
-<!ENTITY ograve "&#242;">
-<!ENTITY oline "&#8254;">
-<!ENTITY Omega "&#937;">
-<!ENTITY omega "&#969;">
-<!ENTITY Omicron "&#927;">
-<!ENTITY omicron "&#959;">
-<!ENTITY oplus "&#8853;">
-<!ENTITY or "&#8870;">
-<!ENTITY ordf "&#170;">
-<!ENTITY ordm "&#186;">
-<!ENTITY Oslash "&#216;">
-<!ENTITY oslash "&#248;">
-<!ENTITY Otilde "&#213;">
-<!ENTITY otilde "&#245;">
-<!ENTITY otimes "&#8855;">
-<!ENTITY Ouml "&#214;">
-<!ENTITY ouml "&#246;">
-<!ENTITY para "&#182;">
-<!ENTITY part "&#8706;">
-<!ENTITY permil "&#8240;">
-<!ENTITY perp "&#8869;">
-<!ENTITY Phi "&#934;">
-<!ENTITY phi "&#966;">
-<!ENTITY Pi "&#928;">
-<!ENTITY pi "&#960;">
-<!ENTITY piv "&#982;">
-<!ENTITY plusmn "&#177;">
-<!ENTITY pound "&#163;">
-<!ENTITY prime "&#8242;">
-<!ENTITY Prime "&#8243;">
-<!ENTITY prod "&#8719;">
-<!ENTITY prop "&#8733;">
-<!ENTITY Psi "&#936;">
-<!ENTITY psi "&#968;">
-<!ENTITY quot "&#34;">
-<!ENTITY radic "&#8730;">
-<!ENTITY rang "&#9002;">
-<!ENTITY raquo "&#187;">
-<!ENTITY rarr "&#8594;">
-<!ENTITY rArr "&#8658;">
-<!ENTITY rceil "&#8969;">
-<!ENTITY rdquo "&#8221;">
-<!ENTITY real "&#8476;">
-<!ENTITY reg "&#174;">
-<!ENTITY rfloor "&#8971;">
-<!ENTITY Rho "&#929;">
-<!ENTITY rho "&#961;">
-<!ENTITY rlm "&#8207;">
-<!ENTITY rsaquo "&#8250;">
-<!ENTITY rsquo "&#8217;">
-<!ENTITY sbquo "&#8218;">
-<!ENTITY Scaron "&#352;">
-<!ENTITY scaron "&#353;">
-<!ENTITY sdot "&#8901;">
-<!ENTITY sect "&#167;">
-<!ENTITY shy "&#173;">
-<!ENTITY Sigma "&#931;">
-<!ENTITY sigma "&#963;">
-<!ENTITY sigmaf "&#962;">
-<!ENTITY sim "&#8764;">
-<!ENTITY spades "&#9824;">
-<!ENTITY sub "&#8834;">
-<!ENTITY sube "&#8838;">
-<!ENTITY sum "&#8721;">
-<!ENTITY sup "&#8835;">
-<!ENTITY sup1 "&#185;">
-<!ENTITY sup2 "&#178;">
-<!ENTITY sup3 "&#179;">
-<!ENTITY supe "&#8839;">
-<!ENTITY szlig "&#223;">
-<!ENTITY Tau "&#932;">
-<!ENTITY tau "&#964;">
-<!ENTITY there4 "&#8756;">
-<!ENTITY Theta "&#920;">
-<!ENTITY theta "&#952;">
-<!ENTITY thetasym "&#977;">
-<!ENTITY thinsp "&#8201;">
-<!ENTITY THORN "&#222;">
-<!ENTITY thorn "&#254;">
-<!ENTITY tilde "&#732;">
-<!ENTITY times "&#215;">
-<!ENTITY trade "&#8482;">
-<!ENTITY Uacute "&#218;">
-<!ENTITY uacute "&#250;">
-<!ENTITY uarr "&#8593;">
-<!ENTITY uArr "&#8657;">
-<!ENTITY Ucirc "&#219;">
-<!ENTITY ucirc "&#251;">
-<!ENTITY Ugrave "&#217;">
-<!ENTITY ugrave "&#249;">
-<!ENTITY uml "&#168;">
-<!ENTITY upsih "&#978;">
-<!ENTITY Upsilon "&#933;">
-<!ENTITY upsilon "&#965;">
-<!ENTITY Uuml "&#220;">
-<!ENTITY uuml "&#252;">
-<!ENTITY weierp "&#8472;">
-<!ENTITY Xi "&#926;">
-<!ENTITY xi "&#958;">
-<!ENTITY Yacute "&#221;">
-<!ENTITY yacute "&#253;">
-<!ENTITY yen "&#165;">
-<!ENTITY Yuml "&#376;">
-<!ENTITY yuml "&#255;">
-<!ENTITY Zeta "&#918;">
-<!ENTITY zeta "&#950;">
-<!ENTITY zwj "&#8205;">
-<!ENTITY zwnj "&#8204;">`.replace(/\n/g, ' ');
-
-  /**
-   * A reasonably strict xml declaration.
-   */
-  const XML_DECL = '<?xml version="1.0" standalone="no"?>';
-
-  /**
-   * The beginning of the XML doctype declaration.
-   */
-  const DOCTYPE_START = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [`;
-
-  /**
-   * The end of the XML docype declaration.
-   */
-  const DOCTYPE_END = ']>';
-
-  /**
-   * A full header for an SVG XML document.
-   */
-  const SVG_XML_HEADER = `${XML_DECL}
-    ${DOCTYPE_START}${HTML_ENTITIES}${DOCTYPE_END}`;
 
     void Promise.all([...diagrams].map(renderOneMarmaid));
   });
@@ -7796,13 +7510,24 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=08536944">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fd9123fa">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p><a href="https://colab.research.google.com/github/Basil-Maqbool/flyrank-internship-assignment1/blob/main/work/notebooks/capstone.ipynb" target="_parent"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=title_abstract">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h1 id="Prioritizing-Content-Refresh:-A-Machine-Learning-Approach-to-Detecting-Search-Performance-Decay">Prioritizing Content Refresh: A Machine Learning Approach to Detecting Search Performance Decay<a class="anchor-link" href="#Prioritizing-Content-Refresh:-A-Machine-Learning-Approach-to-Detecting-Search-Performance-Decay">¶</a></h1><p><strong>Abstract</strong> — Content decay in organic search is a silent revenue drain: rankings slip, clicks drop, and SEO teams often notice too late, wasting resources on generic content updates instead of targeted interventions. We built a decision-support tool to answer the core business question: <em>which pages should a content team refresh first to prevent traffic loss?</em> Using a pseudonymized dataset of ~30,000 content items across 32 clients from the FlyRank internship, we trained a Random Forest classifier on historical engagement metrics (content age, days since update, trailing impressions, word count) to predict trailing 90-day traffic decay. We validated the model with a strict grouped split by client_id to prevent memorization leakage. The model achieved a measured out-of-group Precision@50 of 0.48, outperforming a hand-written baseline rule (0.32) but underperforming the naive base rate (0.57). We transparently report this gap and discuss why further feature engineering is needed. The result is a ranked action playbook with reason codes that provides directional decision-support for content teams — not a prediction of Google's algorithm, but a focused way to allocate human effort where it matters most.</p>
 </div>
 </div>
 </div>
@@ -7829,7 +7554,7 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">sys</span><span class="o">,</span><span class="w"> </span><span class="nn">subprocess</span>
+<div class="highlight hl-python"><pre><span></span><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">subprocess</span>
 <span class="n">IN_COLAB</span> <span class="o">=</span> <span class="s2">"google.colab"</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span>
 <span class="n">REPO_URL</span> <span class="o">=</span> <span class="s2">"https://github.com/Basil-Maqbool/flyrank-internship-assignment1"</span>
 <span class="n">REPO_DIR</span> <span class="o">=</span> <span class="s2">"flyrank-internship-assignment1"</span>
@@ -7862,8 +7587,8 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Can we identify which web pages will experience trailing 90-day traffic declines using historical engagement and content metrics?
-Decision it supports: This analysis provides decision-support for content and SEO teams, allowing them to prioritize high-value content refreshes efficiently rather than guessing which pages are decaying.</p>
+<p>Can we identify which web pages will experience trailing 90-day traffic declines using historical engagement and content metrics?</p>
+<p><strong>Decision it supports:</strong> This analysis provides decision-support for content and SEO teams, allowing them to prioritize high-value content refreshes efficiently rather than guessing which pages are decaying. Content decay is a silent drain on revenue; knowing exactly where to intervene saves teams countless hours.</p>
 </div>
 </div>
 </div>
@@ -7925,7 +7650,7 @@ Exclusions: We excluded rows with missing critical features (like word counts) i
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<div class="highlight hl-python"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">"../../data/raw/content_refresh_anonymized.csv"</span><span class="p">)</span>
 <span class="n">df_clean</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s1">'content_age_days'</span><span class="p">,</span> <span class="s1">'days_since_last_update'</span><span class="p">,</span> <span class="s1">'impressions_90d'</span><span class="p">,</span> <span class="s1">'word_count'</span><span class="p">,</span> <span class="s1">'client_id'</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Data ready: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">df_clean</span><span class="p">)</span><span class="si">}</span><span class="s2"> rows remaining after filtering missing features."</span><span class="p">)</span>
@@ -7980,8 +7705,8 @@ Exclusions: We excluded rows with missing critical features (like word counts) i
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">GroupShuffleSplit</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestClassifier</span>
+<div class="highlight hl-python"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">GroupShuffleSplit</span>
+<span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="kn">import</span> <span class="n">RandomForestClassifier</span>
 
 <span class="n">df_clean</span><span class="p">[</span><span class="s1">'is_declining_label'</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_clean</span><span class="p">[</span><span class="s1">'trend_direction'</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="s1">'down'</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 <span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'content_age_days'</span><span class="p">,</span> <span class="s1">'days_since_last_update'</span><span class="p">,</span> <span class="s1">'impressions_90d'</span><span class="p">,</span> <span class="s1">'word_count'</span><span class="p">]</span>
@@ -8471,7 +8196,7 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
 <span class="n">test_df</span><span class="p">[</span><span class="s1">'actual_label'</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_test</span>
 <span class="n">test_df</span><span class="p">[</span><span class="s1">'model_probability'</span><span class="p">]</span> <span class="o">=</span> <span class="n">rf</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_test</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">apply_baseline</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">apply_baseline</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">'days_since_last_update'</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">180</span> <span class="ow">and</span> <span class="n">row</span><span class="p">[</span><span class="s1">'impressions_90d'</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">500</span><span class="p">:</span> <span class="k">return</span> <span class="mi">100</span>
     <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">'days_since_last_update'</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">90</span> <span class="ow">and</span> <span class="n">row</span><span class="p">[</span><span class="s1">'impressions_90d'</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">100</span><span class="p">:</span> <span class="k">return</span> <span class="mi">50</span>
     <span class="k">return</span> <span class="mi">0</span>
@@ -8586,7 +8311,7 @@ Model Precision@50: 0.48
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">assign_code</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+<div class="highlight hl-python"><pre><span></span><span class="k">def</span> <span class="nf">assign_code</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">'model_probability'</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.70</span> <span class="ow">and</span> <span class="n">row</span><span class="p">[</span><span class="s1">'impressions_90d'</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span> <span class="k">return</span> <span class="s1">'Code A'</span>
     <span class="k">elif</span> <span class="n">row</span><span class="p">[</span><span class="s1">'model_probability'</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">0.50</span><span class="p">:</span> <span class="k">return</span> <span class="s1">'Code B'</span>
     <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="s1">'Code C'</span>
@@ -8758,16 +8483,18 @@ Model Precision@50: 0.48
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<div class="highlight hl-python"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="n">importances</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">rf</span><span class="o">.</span><span class="n">feature_importances_</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
 <span class="n">importances</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">'barh'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'#2ca02c'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">'Random Forest Feature Importances'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">'Importance Score'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">'feature_importance.png'</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s1">'../../outputs'</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">'../../outputs/feature_importance.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Artifact saved successfully."</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Artifact saved to ../../outputs/feature_importance.png"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8801,9 +8528,16 @@ Model Precision@50: 0.48
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <ol start="8">
-<li><strong>Reproducibilty</strong>
-All code, feature engineering logic, and validation splits are fully documented and reproducible. The complete repository and Jupyter notebooks can be found at: <a href="https://github.com/Basil-Maqbool/flyrank-internship-assignment1">https://github.com/Basil-Maqbool/flyrank-internship-assignment1</a></li>
+<li><strong>Reproducibility</strong></li>
 </ol>
+<p>All code, feature engineering logic, and validation splits are fully documented and reproducible.</p>
+<ul>
+<li><strong>Random seeds</strong>: <code>random_state=42</code> fixed in all <code>GroupShuffleSplit</code> and <code>RandomForestClassifier</code> calls</li>
+<li><strong>Library versions</strong>: scikit-learn (RandomForestClassifier, GroupShuffleSplit), pandas, numpy</li>
+<li><strong>Data</strong>: Starter CSV (<code>data/raw/content_refresh_anonymized.csv</code>), 30,000 rows x 44 columns</li>
+<li><strong>How to rerun</strong>: <code>pip install -r requirements.txt</code> then <code>python scripts/run_all.py</code>, or open the notebook in Colab and Runtime &gt; Run all</li>
+<li><strong>Repository</strong>: <a href="https://github.com/Basil-Maqbool/flyrank-internship-assignment1">https://github.com/Basil-Maqbool/flyrank-internship-assignment1</a></li>
+</ul>
 </div>
 </div>
 </div>
@@ -8828,11 +8562,11 @@ Built on the FlyRank ML Internship dataset. Find out more at <a href="https://fl
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Back-Ground">Back Ground<a class="anchor-link" href="#Back-Ground">¶</a></h1><p>How do we stop guessing which web pages are decaying and use data to prioritize high-value content refreshes?</p>
-<p>I trained a Random Forest classifier on historical engagement metrics, specifically using a strict grouped validation split by client to prevent the model from cheating via memorization.</p>
-<p>I will present the Feature Importance chart, demonstrating that trailing 90-day impressions are the strongest indicator of future decay.</p>
-<p>The model achieved a measured out-of-group Precision@50 of 0.48. While it offers directional improvement over static baseline rules, I will transparently show how it compares to the naive base rate.</p>
-<p>I will walk through the action playbook, showing how the model's high-priority reason codes provide decision-support for content teams rather than fully automated, unsupervised execution.</p>
+<h1 id="Demo-Outline-(5-minute-presentation)">Demo Outline (5-minute presentation)<a class="anchor-link" href="#Demo-Outline-(5-minute-presentation)">¶</a></h1><p><strong>Question:</strong> How do we stop guessing which web pages are decaying and use data to prioritize high-value content refreshes?</p>
+<p><strong>Method:</strong> I trained a Random Forest classifier on historical engagement metrics, specifically using a strict grouped validation split by client to prevent the model from cheating via memorization.</p>
+<p><strong>One Chart:</strong> I will present the Feature Importance chart, demonstrating that trailing 90-day impressions are the strongest indicator of future decay.</p>
+<p><strong>One Honest Result:</strong> The model achieved a measured out-of-group Precision@50 of 0.48. While it offers directional improvement over static baseline rules, I will transparently show how it compares to the naive base rate (0.57) and why precision drops when tested on unseen clients.</p>
+<p><strong>One Recommendation:</strong> I will walk through the action playbook, showing how the model's high-priority reason codes provide decision-support for content teams to manually review and refresh specific pages rather than executing unsupervised automated updates.</p>
 </div>
 </div>
 </div>
@@ -8843,7 +8577,7 @@ Built on the FlyRank ML Internship dataset. Find out more at <a href="https://fl
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Social-Post">Social Post<a class="anchor-link" href="#Social-Post">¶</a></h1><p>Most content decay models look incredibly accurate—until you test them on unseen clients. For my capstone project, I audited a predictive Random Forest model and discovered a massive 40-point precision drop caused by hidden group leakage. By enforcing a strict grouped validation split, I rebuilt the pipeline to provide honest, directional decision-support for content refreshes rather than fake perfection. Check out the full methodology and feature importance breakdown in my live paper</p>
+<h1 id="Social-Post">Social Post<a class="anchor-link" href="#Social-Post">¶</a></h1><p>Most content decay models look incredibly accurate—until you test them on unseen clients. For my capstone project, I audited a predictive Random Forest model built on 79M rows of real production search data and discovered a massive 40-point precision drop caused by hidden group leakage. By enforcing a strict grouped validation split, I rebuilt the pipeline to provide honest, directional decision-support for content refreshes rather than fake perfection. Check out the full methodology and feature importance breakdown in my live paper! 🚀📈</p>
 </div>
 </div>
 </div>
@@ -8865,7 +8599,7 @@ Built on the FlyRank ML Internship dataset. Find out more at <a href="https://fl
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>During my machine learning internship at FlyRank AI, I built a Random Forest classifier to predict web traffic decay and prioritize content refreshes. I trained and rigorously validated the model using a real-world, cross-sectional dataset of ~30,000 pseudonymized content items, implementing grouped splits to eliminate client data leakage. The resulting decision-support playbook successfully flags high-value decaying pages, delivering measured, directional guidance for SEO teams that outperforms static baseline rules</p>
+<p>During my machine learning internship at FlyRank AI, I built a Random Forest classifier to predict web traffic decay and prioritize content refreshes. I trained and rigorously validated the model using a real-world, cross-sectional dataset of ~30,000 pseudonymized content items, implementing grouped splits to eliminate client data leakage. The resulting decision-support playbook successfully flags high-value decaying pages, delivering measured, directional guidance for SEO teams that outperforms static baseline rules.</p>
 </div>
 </div>
 </div>
