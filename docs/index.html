@@ -1,390 +1,1630 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Refresh &amp; Content Opportunity Scoring — FlyRank ML Internship Capstone</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --paper:#FFFFFF;
-    --paper-raised:#F7F7F4;
-    --ink:#111114;
-    --ink-soft:#57585F;
-    --signal:#D8432B;
-    --signal-soft:#FAE1DB;
-    --data:#1E5AA8;
-    --data-soft:#DDE7F5;
-    --ok:#B9821F;
-    --ok-soft:#F6ECD6;
-    --line:#DDDDD8;
-    --line-strong:#B8B8B2;
-    --dot:#E3E3DE;
-  }
-  *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-  body{
-    margin:0;
-    background:
-      radial-gradient(var(--dot) 1px, transparent 1px) 0 0/22px 22px,
-      var(--paper);
-    color:var(--ink-soft);
-    font-family:'Inter',sans-serif;
-    font-size:16px;
-    line-height:1.65;
-  }
-  .mono{font-family:'JetBrains Mono',monospace;}
-  h1,h2,h3{
-    font-family:'IBM Plex Sans Condensed',sans-serif;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:0.01em;
-    color:var(--ink);
-  }
-  a{color:var(--data);}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prioritizing Content Refresh: A Machine Learning Approach to Detecting Search Performance Decay</title>
+  <meta name="description"
+    content="A decline-triage ranking on 78.8M rows of pseudonymized search data. A Random Forest achieved 0.67 same-window P@50 but collapsed to 0.36 under time-aware validation. The deployed playbook ships the transparent rule with structural human review.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --paper: #F1F7EE;
+      --paper-raised: #FAFCF7;
+      --paper-deep: #E4EFDD;
+      --ink: #0F1F14;
+      --ink-soft: #2F4234;
+      --ink-mute: #6B8072;
+      --sage: #3F9A52;
+      --sage-soft: #D8ECCF;
+      --sage-mid: #7BBD7E;
+      --sage-deep: #1F6B36;
+      --sage-glow: rgba(63, 154, 82, 0.18);
+      --crimson: #C8304A;
+      --crimson-soft: #FBE2E5;
+      --gold: #A6740F;
+      --gold-soft: #F8EFD5;
+      --hair: #BFD6B5;
+      --hair-strong: #8DB284;
+      --shadow-sm: 0 1px 2px rgba(31, 107, 54, 0.06), 0 2px 6px rgba(31, 107, 54, 0.04);
+      --shadow-md: 0 4px 12px rgba(31, 107, 54, 0.08), 0 12px 32px rgba(31, 107, 54, 0.06);
+      --shadow-lg: 0 12px 32px rgba(31, 107, 54, 0.10), 0 32px 64px rgba(31, 107, 54, 0.08);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+    }
 
-  /* ---------- Layout: sidebar + content ---------- */
-  .layout{display:grid;grid-template-columns:220px 1fr;gap:56px;max-width:1180px;margin:0 auto;padding:0 32px;}
-  .toc{position:sticky;top:40px;align-self:start;padding-top:8px;}
-  .toc .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;color:var(--ink-soft);text-transform:uppercase;margin-bottom:14px;}
-  .toc ol{list-style:none;margin:0;padding:0;border-left:2px solid var(--line);}
-  .toc li{margin:0;}
-  .toc a{
-    display:flex;gap:10px;align-items:baseline;
-    padding:9px 0 9px 16px;margin-left:-2px;border-left:2px solid transparent;
-    text-decoration:none;color:var(--ink-soft);font-size:13.5px;
-    transition:color .15s ease, border-color .15s ease;
-  }
-  .toc a:hover{color:var(--ink);border-left-color:var(--signal);}
-  .toc a .num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--signal);min-width:16px;}
-  .content{padding-bottom:120px;}
+    * {
+      box-sizing: border-box;
+    }
 
-  /* ---------- Hero ---------- */
-  .hero{padding:64px 0 40px;border-bottom:3px solid var(--ink);background:var(--paper);}
-  .docband{
-    display:flex;justify-content:space-between;align-items:center;
-    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;
-    color:var(--ink-soft);border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:32px;
-  }
-  .docband span b{color:var(--ink);}
-  h1.title{font-size:46px;line-height:1.05;margin:0 0 14px;max-width:860px;}
-  h1.title em{font-style:normal;color:var(--signal);}
-  .subtitle{font-size:17px;color:var(--ink-soft);max-width:640px;margin:0 0 30px;font-family:'Inter',sans-serif;text-transform:none;letter-spacing:normal;}
-  .meta-row{display:flex;flex-wrap:wrap;gap:22px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft);margin-bottom:38px;}
-  .meta-row b{color:var(--ink);}
+    html {
+      scroll-behavior: smooth;
+    }
 
-  .abstract{
-    background:var(--paper-raised);
-    border:1px solid var(--line);
-    border-left:4px solid var(--ink);
-    padding:22px 26px;
-    max-width:760px;
-    font-size:15px;
-    color:var(--ink-soft);
-    margin-bottom:44px;
-  }
-  .abstract b{color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;display:block;margin-bottom:10px;}
+    body {
+      margin: 0;
+      background:
+        radial-gradient(1100px 600px at 90% -10%, rgba(63, 154, 82, 0.10), transparent 60%),
+        radial-gradient(900px 500px at -10% 20%, rgba(123, 189, 126, 0.10), transparent 55%),
+        var(--paper);
+      color: var(--ink);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.62;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
 
-  /* ---------- Calibration gauge (signature component) ---------- */
-  .gauge-panel{
-    border:1px solid var(--ink);background:var(--paper-raised);
-    padding:26px 28px 22px;max-width:760px;
-  }
-  .gauge-panel .gauge-label{
-    font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;
-    color:var(--ink-soft);margin-bottom:18px;display:flex;justify-content:space-between;
-  }
-  .gauge-scale{position:relative;height:64px;margin:0 6px;}
-  .gauge-baseline{position:absolute;left:0;right:0;top:34px;height:2px;background:var(--line-strong);}
-  .gauge-tick{position:absolute;top:28px;width:1px;height:14px;background:var(--line-strong);}
-  .gauge-tick-lbl{position:absolute;top:44px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-soft);transform:translateX(-50%);}
-  .gauge-marker{position:absolute;top:0;transform:translateX(-50%);text-align:center;}
-  .gauge-marker .pin{width:2px;height:34px;margin:0 auto;}
-  .gauge-marker .pin.model{background:var(--data);}
-  .gauge-marker .pin.baseline{background:var(--signal);}
-  .gauge-marker .pin.naive{background:var(--ok);}
-  .gauge-marker .knob{
-    width:11px;height:11px;border-radius:50%;margin:0 auto -6px;border:2px solid var(--paper-raised);
-    box-shadow:0 0 0 1px var(--ink);
-  }
-  .gauge-marker .knob.model{background:var(--data);}
-  .gauge-marker .knob.baseline{background:var(--signal);}
-  .gauge-marker .knob.naive{background:var(--ok);}
-  .gauge-marker .mk-lbl{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-soft);margin-top:6px;white-space:nowrap;}
-  .gauge-marker .mk-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--ink);}
-  .gauge-note{
-    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);
-    padding-top:16px;margin-top:22px;border-top:1px solid var(--line);
-  }
+    h1,
+    h2,
+    h3 {
+      font-family: 'Newsreader', serif;
+      font-weight: 600;
+      letter-spacing: -0.012em;
+      color: var(--ink);
+      line-height: 1.14;
+    }
 
-  /* ---------- ranked queue table (restyled as instrument log) ---------- */
-  .ledger{border:1px solid var(--ink);background:var(--paper-raised);}
-  .ledger-head{
-    display:grid;grid-template-columns:44px 1fr 150px 90px 130px;
-    gap:14px;padding:10px 18px;
-    font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-soft);
-    border-bottom:1px solid var(--ink);background:var(--paper);
-  }
-  .ledger-row{
-    display:grid;grid-template-columns:44px 1fr 150px 90px 130px;
-    gap:14px;align-items:center;padding:13px 18px;
-    border-bottom:1px solid var(--line);
-    font-size:13.5px;
-  }
-  .ledger-row:last-child{border-bottom:none;}
-  .rank-badge{
-    width:28px;height:28px;display:flex;align-items:center;justify-content:center;
-    background:var(--ink);color:var(--paper);
-    font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;
-  }
-  .hash{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--ink-soft);}
-  .reason-pill{
-    display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10.5px;
-    background:var(--signal-soft);color:var(--signal);padding:4px 9px;
-    white-space:nowrap;
-  }
-  .gapbar-wrap{display:flex;align-items:center;gap:8px;}
-  .gapbar-track{flex:1;height:5px;background:var(--line);position:relative;}
-  .gapbar-fill{position:absolute;left:0;top:0;height:100%;background:var(--signal);}
-  .gap-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);}
-  .action-dot{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--ink-soft);}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--signal);flex-shrink:0;}
-  .dot.monitor{background:var(--ok);}
+    a {
+      color: var(--sage-deep);
+      text-decoration: none;
+      transition: color .15s ease;
+    }
 
-  .ledger-teaser-note{
-    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);
-    padding:12px 18px;border-top:1px solid var(--line);background:var(--paper);
-  }
+    a:hover {
+      color: var(--sage);
+    }
 
-  /* ---------- Section styling ---------- */
-  section{padding:56px 0;border-bottom:1px solid var(--line);}
-  section:last-of-type{border-bottom:none;}
-  .sec-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--signal);letter-spacing:0.1em;display:block;margin-bottom:10px;}
-  h2{font-size:27px;margin:0 0 20px;}
-  h3{font-size:15.5px;margin:28px 0 10px;color:var(--ink);}
-  p{color:var(--ink-soft);max-width:740px;}
-  p.lead{font-size:16.5px;color:var(--ink);max-width:740px;font-family:'Inter',sans-serif;}
-  ul.plain{max-width:740px;color:var(--ink-soft);padding-left:20px;}
-  ul.plain li{margin-bottom:8px;}
+    code,
+    .mono,
+    .num {
+      font-family: 'JetBrains Mono', monospace;
+    }
 
-  .callout{
-    background:var(--data-soft);border-left:3px solid var(--data);
-    padding:16px 20px;max-width:740px;margin:20px 0;font-size:14.5px;color:var(--ink);
-  }
-  .callout.warn{background:var(--signal-soft);border-left-color:var(--signal);}
-  .callout b{font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:6px;color:var(--ink-soft);}
+    .display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
 
-  /* results comparison bars */
-  .chart-wrap{max-width:740px;margin:24px 0;}
-  .bar-row{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
-  .bar-label{width:190px;font-size:13px;color:var(--ink-soft);flex-shrink:0;font-family:'JetBrains Mono',monospace;}
-  .bar-track{flex:1;height:22px;background:var(--paper);border:1px solid var(--line-strong);position:relative;}
-  .bar-fill{height:100%;}
-  .bar-fill.model{background:var(--data);}
-  .bar-fill.baseline{background:var(--signal);}
-  .bar-fill.naive{background:var(--ok);}
-  .bar-val{width:52px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink);flex-shrink:0;}
+    .wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
 
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:28px;max-width:740px;}
-  .stat-card{border:1px solid var(--line);background:var(--paper-raised);padding:18px 20px;}
-  .stat-card .num{font-family:'IBM Plex Sans Condensed',sans-serif;font-size:30px;font-weight:700;color:var(--ink);}
-  .stat-card .lbl{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: saturate(160%) blur(12px);
+      -webkit-backdrop-filter: saturate(160%) blur(12px);
+      background: rgba(241, 247, 238, 0.78);
+      border-bottom: 1px solid var(--hair);
+    }
 
-  footer{padding:48px 0 80px;}
-  footer p{font-size:13px;color:var(--ink-soft);}
-  .repo-link{
-    display:inline-flex;align-items:center;gap:8px;
-    font-family:'JetBrains Mono',monospace;font-size:13px;
-    border:1px solid var(--ink);padding:10px 16px;
-    text-decoration:none;color:var(--ink);margin-top:10px;
-    background:var(--paper-raised);
-  }
-  .repo-link:hover{background:var(--ink);color:var(--paper);}
+    .topbar-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
 
-  @media (max-width:900px){
-    .layout{grid-template-columns:1fr;}
-    .toc{position:static;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:20px;}
-    .toc ol{border-left:none;}
-    .toc a{padding-left:0;border-left:none;}
-    h1.title{font-size:32px;}
-    .ledger-head, .ledger-row{grid-template-columns:32px 1fr 90px;}
-    .ledger-head span:nth-child(4), .ledger-head span:nth-child(5),
-    .ledger-row .gapbar-wrap, .ledger-row .action-dot{display:none;}
-    .two-col{grid-template-columns:1fr;}
-    .gauge-scale{margin:0 2px;}
-  }
-  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto;}}
-</style>
+    .topbar .brand {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--sage-deep);
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .topbar .brand-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--sage);
+      box-shadow: 0 0 0 4px var(--sage-glow);
+    }
+
+    .topbar nav {
+      display: flex;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-soft);
+      margin-left: 8px;
+    }
+
+    .topbar nav a {
+      padding: 6px 12px;
+      border-radius: 999px;
+      color: var(--ink-soft);
+    }
+
+    .topbar nav a:hover {
+      background: var(--sage-soft);
+      color: var(--sage-deep);
+    }
+
+    .topbar .spacer {
+      flex: 1;
+    }
+
+    .topbar .pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--sage-soft);
+      color: var(--sage-deep);
+      border: 1px solid var(--sage-mid);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 64px;
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    .toc {
+      position: sticky;
+      top: 88px;
+      align-self: start;
+      padding-top: 8px;
+    }
+
+    .toc-card {
+      background: var(--paper-raised);
+      border: 1px solid var(--hair);
+      border-radius: var(--radius-md);
+      padding: 18px 18px 14px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .toc .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--sage-deep);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .toc ol {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .toc li {
+      margin: 0;
+    }
+
+    .toc a {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 8px 10px;
+      margin: 1px 0;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--ink-soft);
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: background .15s ease, color .15s ease, transform .15s ease;
+    }
+
+    .toc a:hover {
+      background: var(--sage-soft);
+      color: var(--sage-deep);
+      transform: translateX(2px);
+    }
+
+    .toc a .num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--sage-deep);
+      background: var(--sage-soft);
+      padding: 2px 7px;
+      border-radius: 6px;
+      min-width: 22px;
+      text-align: center;
+    }
+
+    .toc a:hover .num {
+      background: var(--sage);
+      color: #fff;
+    }
+
+    .main {
+      padding-bottom: 96px;
+      padding-top: 8px;
+    }
+
+    .hero {
+      padding: 72px 0 36px;
+      position: relative;
+    }
+
+    .eyebrow-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--sage-deep);
+      font-weight: 600;
+    }
+
+    .eyebrow::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--sage);
+      box-shadow: 0 0 0 4px var(--sage-glow);
+    }
+
+    .eyebrow-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--hair-strong), transparent);
+    }
+
+    h1.title {
+      font-size: 54px;
+      line-height: 1.05;
+      margin: 0 0 14px;
+      max-width: 920px;
+      letter-spacing: -0.025em;
+    }
+
+    h1.title em {
+      font-style: italic;
+      color: var(--sage-deep);
+      background: linear-gradient(180deg, transparent 60%, var(--sage-soft) 60%);
+      padding: 0 2px;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: var(--ink-soft);
+      max-width: 720px;
+      margin: 14px 0 30px;
+      line-height: 1.55;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      margin-bottom: 32px;
+    }
+
+    .meta-pill {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      background: var(--paper-raised);
+      border: 1px solid var(--hair);
+      padding: 7px 12px;
+      border-radius: 999px;
+    }
+
+    .meta-pill b {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .tldr {
+      background: var(--paper-raised);
+      border: 1px solid var(--hair);
+      border-radius: var(--radius-md);
+      padding: 22px 26px;
+      max-width: 880px;
+      font-size: 14.5px;
+      margin-bottom: 26px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tldr::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--sage), var(--sage-mid));
+    }
+
+    .tldr>b {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--sage-deep);
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .tldr dl {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 8px 18px;
+      margin: 0;
+    }
+
+    .tldr dt {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--sage-deep);
+      font-weight: 600;
+    }
+
+    .tldr dd {
+      margin: 0;
+      color: var(--ink);
+    }
+
+    .resultcard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      max-width: 880px;
+      margin-bottom: 36px;
+    }
+
+    .resultcard .cell {
+      padding: 26px 28px;
+      background: var(--paper-raised);
+      border: 1px solid var(--hair);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .resultcard .cell:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .resultcard .cell::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle at top right, var(--sage-glow), transparent 70%);
+      pointer-events: none;
+    }
+
+    .resultcard .big {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.025em;
+      line-height: 1.05;
+    }
+
+    .resultcard .arrow {
+      font-size: 22px;
+      color: var(--crimson);
+      margin: 0 4px;
+      font-weight: 600;
+    }
+
+    .resultcard .small {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--ink-mute);
+      margin-top: 10px;
+      line-height: 1.55;
+    }
+
+    .abstract {
+      background: linear-gradient(135deg, var(--paper-raised), var(--sage-soft));
+      border: 1px solid var(--hair);
+      border-radius: var(--radius-md);
+      padding: 26px 30px;
+      max-width: 880px;
+      font-size: 15px;
+      color: var(--ink-soft);
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+
+    .abstract::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 16px;
+      bottom: 16px;
+      width: 4px;
+      border-radius: 0 4px 4px 0;
+      background: var(--sage);
+    }
+
+    .abstract .abs-head {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--sage-deep);
+      display: block;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .abstract p {
+      margin: 0 0 12px;
+      max-width: none;
+    }
+
+    .abstract p:last-child {
+      margin-bottom: 0;
+    }
+
+    section {
+      padding: 56px 0;
+      border-bottom: 1px solid var(--hair);
+      scroll-margin-top: 80px;
+    }
+
+    section:last-of-type {
+      border-bottom: none;
+    }
+
+    .sec-head {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+
+    .sec-num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      background: var(--sage);
+      padding: 4px 10px;
+      border-radius: 8px;
+      letter-spacing: 0.04em;
+    }
+
+    .sec-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--ink-mute);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      font-size: 38px;
+      margin: 0 0 20px;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      font-size: 19px;
+      margin: 28px 0 12px;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    p {
+      max-width: 800px;
+      color: var(--ink-soft);
+      margin: 0 0 14px;
+    }
+
+    p.lead {
+      font-size: 17px;
+      color: var(--ink);
+      max-width: 800px;
+      line-height: 1.6;
+    }
+
+    ul.plain {
+      max-width: 800px;
+      color: var(--ink-soft);
+      padding-left: 22px;
+    }
+
+    ul.plain li {
+      margin-bottom: 10px;
+    }
+
+    .claims {
+      margin: 18px 0;
+      max-width: 880px;
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .claims li {
+      margin-bottom: 14px;
+      color: var(--ink-soft);
+      background: var(--paper-raised);
+      border: 1px solid var(--hair);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-sm);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .claims li:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .claims li b {
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--sage-deep);
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-right: 8px;
+      letter-spacing: 0.04em;
+    }
+
+    .callout {
+      background: linear-gradient(135deg, var(--sage-soft), #ECF6E6);
+      border: 1px solid var(--sage-mid);
+      border-left: 4px solid var(--sage);
+      border-radius: var(--radius-md);
+      padding: 18px 22px;
+      max-width: 880px;
+      margin: 20px 0;
+      font-size: 14.5px;
+      color: var(--ink);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .callout .ctitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      display: block;
+      margin-bottom: 8px;
+      color: var(--sage-deep);
+      font-weight: 700;
+    }
+
+    .callout.warn {
+      background: linear-gradient(135deg, var(--crimson-soft), #FFF1F3);
+      border-color: #E5A8B2;
+      border-left-color: var(--crimson);
+    }
+
+    .callout.warn .ctitle {
+      color: var(--crimson);
+    }
+
+    .callout.caveat {
+      background: linear-gradient(135deg, var(--gold-soft), #FBF6E6);
+      border-color: #D9C383;
+      border-left-color: var(--gold);
+    }
+
+    .callout.caveat .ctitle {
+      color: var(--gold);
+    }
+
+    .callout p {
+      margin: 0 0 10px;
+      max-width: none;
+    }
+
+    .callout p:last-child {
+      margin-bottom: 0;
+    }
+
+    .tablewrap {
+      max-width: 880px;
+      margin: 20px 0;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--hair);
+      box-shadow: var(--shadow-sm);
+      background: var(--paper-raised);
+    }
+
+    table.data {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 13.5px;
+      display: block;
+      overflow-x: auto;
+    }
+
+    table.data th {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-align: left;
+      color: var(--sage-deep);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--hair);
+      background: var(--paper-deep);
+      font-weight: 700;
+    }
+
+    table.data td {
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--hair);
+      color: var(--ink);
+      vertical-align: top;
+    }
+
+    table.data tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.data tr.highlight td {
+      background: linear-gradient(90deg, var(--sage-soft), transparent);
+      color: var(--sage-deep);
+      font-weight: 500;
+    }
+
+    table.data tr.base td {
+      background: var(--gold-soft);
+      font-style: italic;
+      color: var(--ink-soft);
+    }
+
+    table.data td.mono,
+    table.data th.mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .fig {
+      margin: 22px 0 8px;
+    }
+
+    .fig img {
+      max-width: 100%;
+      border: 1px solid var(--hair);
+      border-radius: var(--radius-md);
+      display: block;
+    }
+
+    .fig-cap {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--ink-mute);
+      margin-top: 8px;
+      max-width: 820px;
+    }
+
+    .ledger {
+      background: var(--paper-raised);
+      border: 1px solid var(--hair);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      max-width: 880px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      margin: 20px 0;
+      overflow-x: auto;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .ledger .lhd {
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--sage-deep);
+      margin-bottom: 12px;
+      display: block;
+      font-weight: 700;
+    }
+
+    .ledger table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    .ledger td {
+      padding: 7px 12px 7px 0;
+      color: var(--ink-soft);
+    }
+
+    .ledger td:first-child {
+      color: #fff;
+      background: var(--sage);
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 6px;
+      min-width: 32px;
+      text-align: center;
+    }
+
+    .ledger td:nth-child(2) {
+      color: var(--sage-deep);
+      font-weight: 600;
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 18px 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border: 1px solid var(--hair);
+      background: var(--paper-raised);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--ink-soft);
+      text-decoration: none;
+      border-radius: 999px;
+      transition: all .2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .badge:hover {
+      border-color: var(--sage);
+      color: var(--sage-deep);
+      background: var(--sage-soft);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    footer {
+      border-top: 1px solid var(--hair);
+      padding: 40px 0 56px;
+      margin-top: 24px;
+      background: linear-gradient(180deg, transparent, var(--paper-deep));
+    }
+
+    footer .foot-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 32px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--ink-mute);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 32px;
+      align-items: center;
+    }
+
+    footer .foot-inner a {
+      color: var(--ink-mute);
+    }
+
+    footer .foot-inner a:hover {
+      color: var(--sage-deep);
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .toc {
+        display: none;
+      }
+
+      h1.title {
+        font-size: 38px;
+      }
+
+      h2 {
+        font-size: 28px;
+      }
+
+      .resultcard {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar nav {
+        display: none;
+      }
+    }
+
+    @media (max-width: 600px) {
+
+      .wrap,
+      .layout,
+      footer .foot-inner,
+      .topbar-inner {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      h1.title {
+        font-size: 30px;
+      }
+
+      .tldr dl {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="hero">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="brand"><span class="brand-dot"></span>FlyRank · Decline Triage</span>
+      <nav>
+        <a href="#s1">Question</a>
+        <a href="#s2">Data</a>
+        <a href="#s3">Method</a>
+        <a href="#s4">Results</a>
+        <a href="#s6">Playbook</a>
+      </nav>
+      <span class="spacer"></span>
+      <span class="pill">v20260703 · 78.8M rows</span>
+    </div>
+  </header>
+
   <div class="wrap">
-    <div class="docband">
-      <span>Doc type: <b>capstone report</b></span>
-      <span>Rev: <b>A</b></span>
-      <span>Status: <b>in progress</b></span>
-    </div>
-    <h1 class="title">Prioritizing Content Refresh: <em>A Machine Learning Approach to Detecting Search Performance Decay</em></h1>
-    <p class="subtitle">A ranking model for content-refresh prioritization, built on real anonymized search data — validated the hard way, with a leak found and removed along the way.</p>
-    <div class="meta-row">
-      <span><b>Author</b> Basil Maqbool</span>
-      <span><b>Lane</b> Refresh / Content Opportunity Scoring</span>
-      <span><b>Data window</b> month = 2026-03</span>
-      <span><b>Program</b> FlyRank ML/AI Internship</span>
-    </div>
-
-    <div class="abstract">
-<b>Abstract</b>
-Content decay in organic search is a silent revenue drain: rankings slip, clicks drop, and SEO teams often notice too late, wasting resources on generic content updates instead of targeted interventions. We built a decision-support tool to answer the core business question: *which pages should a content team refresh first to prevent traffic loss?* Using a pseudonymized dataset of ~30,000 content items across 32 clients from the FlyRank internship, we trained a Random Forest classifier on historical engagement metrics (content age, days since update, trailing impressions, word count) to predict trailing 90-day traffic decay. We validated the model with a strict grouped split by client_id to prevent memorization leakage. The model achieved a measured out-of-group Precision@50 of 0.48, outperforming a hand-written baseline rule (0.32) but underperforming the naive base rate (0.57). We transparently report this gap and discuss why further feature engineering is needed. The result is a ranked action playbook with reason codes that provides directional decision-support for content teams — not a prediction of Google's algorithm, but a focused way to allocate human effort where it matters most.
-</div>
-
-    <div class="gauge-panel">
-      <div class="gauge-label"><span>Calibration reading — Precision@50</span><span>scale 0.00 – 1.00</span></div>
-      <div class="gauge-scale">
-        <div class="gauge-baseline"></div>
-        <div class="gauge-tick" style="left:0%"></div><div class="gauge-tick-lbl" style="left:0%">0.0</div>
-        <div class="gauge-tick" style="left:25%"></div><div class="gauge-tick-lbl" style="left:25%">0.25</div>
-        <div class="gauge-tick" style="left:50%"></div><div class="gauge-tick-lbl" style="left:50%">0.5</div>
-        <div class="gauge-tick" style="left:75%"></div><div class="gauge-tick-lbl" style="left:75%">0.75</div>
-        <div class="gauge-tick" style="left:100%"></div><div class="gauge-tick-lbl" style="left:100%">1.0</div>
-
-        <div class="gauge-marker" style="left:32%"><div class="knob baseline"></div><div class="pin baseline"></div></div>
-        <div class="gauge-marker" style="left:48%"><div class="knob model"></div><div class="pin model"></div></div>
-        <div class="gauge-marker" style="left:57%"><div class="knob naive"></div><div class="pin naive"></div></div>
+    <div class="hero">
+      <div class="eyebrow-row">
+        <span class="eyebrow">FlyRank ML Internship &middot; Capstone</span>
+        <span class="eyebrow-line"></span>
       </div>
-      <div class="gauge-note">baseline rule 0.32 · model 0.48 · naive base rate 0.57 — the model beats the hand-written rule, but not the naive rate. see §04.</div>
+
+      <h1 class="title">Prioritizing Content Refresh: A Machine Learning Approach to Detecting <em>Search Performance
+          Decay</em></h1>
+      <p class="subtitle">A decline-triage ranking system built on 78.8&thinsp;M rows of pseudonymized search data
+        &mdash; evaluated the hard way.</p>
+
+      <div class="meta-row">
+        <span class="meta-pill">author <b>Basil Maqbool</b></span>
+        <span class="meta-pill">dataset <b>FlyRank internship-warehouse v20260703</b></span>
+        <span class="meta-pill">rows <b>78,835,655</b></span>
+        <span class="meta-pill">pages scored <b>81,521</b></span>
+        <span class="meta-pill">window <b>Jan 30 &ndash; Mar 31 2026</b></span>
+      </div>
+
+      <div class="badge-row">
+        <a class="badge" href="https://github.com/Basil-Maqbool/flyrank-internship-assignment1" target="_blank">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+          </svg>
+          Notebooks + Code
+        </a>
+        <a class="badge" href="work/notebooks/capstone.ipynb">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          Capstone Notebook
+        </a>
+        <a class="badge" href="https://huggingface.co/datasets/FlyRank/internship-warehouse" target="_blank">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+          Dataset (HuggingFace)
+        </a>
+      </div>
+
+      <div class="resultcard">
+        <div class="cell">
+          <div class="big">0.68<span class="arrow">&rarr;</span>0.16</div>
+          <div class="small">same-window P@50 &rarr; time-aware pooled<br>the win does not survive a forward leap</div>
+        </div>
+        <div class="cell">
+          <div class="big">~1.4&times;</div>
+          <div class="small">honest lift: time-aware mean fold P@50 0.36<br>vs base rate 0.25 &mdash; ~18 of top-50
+            found vs ~12</div>
+        </div>
+      </div>
+
+      <div class="abstract">
+        <span class="abs-head">Abstract</span>
+        <p>
+          We built a decline-triage ranking system to help content editors prioritize which web pages to review first.
+          Using 78.8&thinsp;M rows of pseudonymized GSC and GA4 data across 104 clients, we constructed a feature table
+          of five pre-decision signals (log impressions, log clicks, average position, active-day count, content age)
+          and defined a proxy label: a page is <em>declining</em> if March impressions fell more than 20% below the
+          prior 30-day window.
+        </p>
+        <p>
+          Across five client-grouped held-out folds, a Random Forest reached mean P@50 of <strong>0.68</strong>
+          versus the frozen rule's <strong>0.38</strong> and the base rate of <strong>0.25</strong> &mdash; a clear
+          same-window win. A time-aware walk-forward protocol (train Dec&ndash;Jan, test March) collapsed that to a mean
+          fold of <strong>0.36</strong> and a pooled score of <strong>0.16</strong> &mdash; below random. The ranking
+          overfits to local volatility, not durable decay patterns.
+        </p>
+        <p>
+          The shipped product is the transparent rule &mdash; <em>stale but visible</em> pages ranked by traffic at
+          stake &mdash;
+          paired with a seven-archetype human-review playbook and five monitoring triggers.
+          Decision-support, not automation. Predictive, not causal.
+        </p>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="layout">
-  <nav class="toc">
-    <div class="eyebrow">Contents</div>
-    <ol>
-      <li><a href="#intro"><span class="num">01</span> Introduction</a></li>
-      <li><a href="#data"><span class="num">02</span> Data</a></li>
-      <li><a href="#method"><span class="num">03</span> Methodology</a></li>
-      <li><a href="#results"><span class="num">04</span> Results</a></li>
-      <li><a href="#limits"><span class="num">05</span> Limitations</a></li>
-      <li><a href="#reco"><span class="num">06</span> Recommendations</a></li>
-      <li><a href="#repro"><span class="num">07</span> Reproducibility</a></li>
-      <li><a href="#ack"><span class="num">08</span> Acknowledgments</a></li>
-    </ol>
-  </nav>
+  <div class="layout">
+    <nav class="toc" aria-label="Contents">
+      <div class="toc-card">
+        <div class="eyebrow">Contents</div>
+        <ol>
+          <li><a href="#s1"><span class="num">1</span> Research Question</a></li>
+          <li><a href="#s2"><span class="num">2</span> Data</a></li>
+          <li><a href="#s3"><span class="num">3</span> Methodology</a></li>
+          <li><a href="#s4"><span class="num">4</span> Results</a></li>
+          <li><a href="#s5"><span class="num">5</span> Limitations</a></li>
+          <li><a href="#s6"><span class="num">6</span> Action Playbook</a></li>
+          <li><a href="#s7"><span class="num">7</span> Monitoring</a></li>
+          <li><a href="#s8"><span class="num">8</span> Reproducibility</a></li>
+        </ol>
+      </div>
+    </nav>
 
-  <main class="content">
+    <main class="main">
 
-    <section id="intro">
-<span class="sec-num">§01</span>
-<h2>Introduction</h2>
-<p class="lead">Can we identify which web pages will experience trailing 90-day traffic declines using historical engagement and content metrics?</p><p><b>Decision it supports:</b> This analysis provides decision-support for content and SEO teams, allowing them to prioritize high-value content refreshes efficiently rather than guessing which pages are decaying. Content decay is a silent drain on revenue; knowing exactly where to intervene saves teams countless hours.</p>
-</section>
+      <section id="s1">
+        <div class="sec-head">
+          <span class="sec-num">01</span>
+          <span class="sec-tag">Section</span>
+        </div>
+        <h2>Research Question</h2>
+        <p class="lead">
+          Which web pages in a content portfolio are experiencing a structural decline in search traffic &mdash;
+          and which should a human editor open first, within a fixed review budget?
+        </p>
+        <p>
+          Content teams operate under capacity constraints. A reviewer can open ~20&ndash;100 pages per cycle,
+          not thousands. The question is therefore a <strong>ranking</strong> problem: given today's data,
+          produce a prioritized queue where declining pages are concentrated at the top.
+        </p>
+        <p>
+          The honest metric is <strong>Precision@K</strong>: of the top-K pages the system recommends,
+          how many truly declined? This is fixed before training. K&nbsp;&isin;&nbsp;{20, 50, 100} matches
+          realistic review budgets.
+        </p>
 
-    <section id="data">
-<span class="sec-num">§02</span>
-<h2>Data</h2>
-<p>We observed data from the FlyRank internship starter dataset (content_refresh_anonymized.csv), containing ~30,000 pseudonymized content items across 32 clients.
-Exclusions: We excluded rows with missing critical features (like word counts) instead of blindly filling them, to prevent injecting a category signal. All client names and private queries were strictly excluded to ensure public safety</p>
-</section>
+        <div class="callout">
+          <span class="ctitle">The decision this supports</span>
+          <p><strong>Actor:</strong> A content editor or SEO manager with a weekly review budget of ~20&ndash;100 pages.
+          </p>
+          <p><strong>Action:</strong> Open the page, read the reason code and risk flags, decide whether to refresh,
+            rewrite the snippet, or monitor.</p>
+          <p><strong>What ML provides:</strong> A ranked queue. Not a diagnosis. Not a guarantee. Not a causal claim.
+          </p>
+        </div>
 
-    <section id="method">
-<span class="sec-num">§03</span>
-<h2>Methodology</h2>
-<p>Label Definition: We defined decay (is_declining_label) from the trend_direction column. To prevent target leakage, we strictly excluded trend_pct from the feature set.</p><p>Features: content_age_days, days_since_last_update, impressions_90d, and word_count.</p><p>Validation Design: We utilized a Grouped Split (GroupShuffleSplit on client_id) to ensure the model was evaluated on clients it had never seen, preventing group memorization.</p><p>Algorithm: Random Forest Classifier.</p>
-</section>
+        <h3>Three real numbers that motivate the problem</h3>
+        <ul class="plain">
+          <li><strong>54.2%</strong> of pages in the starter dataset show a downward trend &mdash; not a rare-event
+            problem. Enough signal to learn from.</li>
+          <li><strong>3&times; gap in the starter pipeline:</strong> a transparent hand-rule achieves P@50 of 0.24; the
+            Random Forest reaches 0.74 on the same held-out clients. That gap is worth investigating.</li>
+          <li><strong>731 median impressions per page</strong> across 32 clients &mdash; most pages have real search
+            exposure worth protecting. 1,205 rows carry no position data (<code>avg_position == 0</code>), handled as a
+            missing-data flag, not rank zero.</li>
+        </ul>
 
-    <section id="results">
-<span class="sec-num">§04</span>
-<h2>Results</h2>
-<p>The Random Forest model achieved a measured out-of-group Precision@50 of 0.48, compared to the heuristic baseline rule which scored 0.32. While the model outperformed the baseline, it underperformed the naive base rate (0.57), indicating that while it offers directional improvement over static rules, it requires further feature engineering for strong standalone accuracy.</p>
+        <div class="callout caveat">
+          <span class="ctitle">Careful words &mdash; what this work cannot claim</span>
+          <p>Refreshing a recommended page does not <em>cause</em> recovery &mdash; no experiment, no causal design. The
+            model does not predict Google's algorithm. The label is a proxy computed from the current window, not a true
+            forward outcome. Results on the 30k-row starter slice require re-validation on the full 79M-row warehouse.
+          </p>
+        </div>
+      </section>
 
-<div class="chart-wrap">
-  <div class="bar-row">
-    <span class="bar-label">model (rf, out-of-group)</span>
-    <div class="bar-track"><div class="bar-fill model" style="width:48%"></div></div>
-    <span class="bar-val">0.48</span>
+      <section id="s2">
+        <div class="sec-head">
+          <span class="sec-num">02</span>
+          <span class="sec-tag">Section</span>
+        </div>
+        <h2>Data</h2>
+        <p class="lead">Two datasets, one decision table.</p>
+
+        <h3>Warehouse release (primary)</h3>
+        <p>
+          <code>hf://datasets/FlyRank/internship-warehouse</code> &mdash; build v20260703.
+          The core fact table (<code>fact_content_daily_performance</code>) contains 78,835,655 rows at
+          <code>report_date &times; client &times; content</code> grain, partitioned by month (2025-01 &rarr; 2026-06).
+          Joined with <code>dim_content</code> (519,606 rows, one per content item) for age and word count.
+        </p>
+
+        <div class="tablewrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>Table</th>
+                <th class="mono">Rows</th>
+                <th>Used for</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">fact_content_daily_performance</td>
+                <td class="mono">78,835,655</td>
+                <td>Impression / click / position aggregations</td>
+              </tr>
+              <tr>
+                <td class="mono">dim_content</td>
+                <td class="mono">519,606</td>
+                <td>Content age, word count, content type</td>
+              </tr>
+              <tr>
+                <td class="mono">dim_clients</td>
+                <td class="mono">104</td>
+                <td>Client metadata (not used as features)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Starter CSV (secondary, for w01&ndash;w02)</h3>
+        <p>
+          <code>data/raw/content_refresh_anonymized.csv</code> &mdash; 30,000 rows &times; 44 columns,
+          one row per pseudonymized content item, 32 clients, trailing-90-day metrics.
+          Used in the early task-framing notebooks only. All warehouse work uses the HuggingFace release.
+        </p>
+
+        <h3>Windows and filtering</h3>
+        <ul class="plain">
+          <li><strong>Feature window:</strong> Jan 30 &ndash; Feb 28 2026 (closed before the label window opens)</li>
+          <li><strong>Label window:</strong> March 2026 &mdash; impressions vs prior 30-day baseline</li>
+          <li><strong>Eligibility:</strong> <code>gsc_data_available IS TRUE</code> AND <code>imp_prev30 &ge; 100</code>
+          </li>
+          <li><strong>Pages scored:</strong> 81,521 across 104 clients</li>
+          <li><strong>Known panel warnings:</strong> GA4 columns are zero-filled (not zero) before each client's
+            <code>ga4_data_start</code>; filtered on the flag. History depth varies wildly per client.
+          </li>
+        </ul>
+      </section>
+
+      <section id="s3">
+        <div class="sec-head">
+          <span class="sec-num">03</span>
+          <span class="sec-tag">Section</span>
+        </div>
+        <h2>Methodology</h2>
+
+        <h3>Label definition</h3>
+        <p>
+          <code>is_declining = 1</code> if March impressions fell more than 20% below the prior 30-day window:
+          <code>imp_last30 &lt; 0.80 &times; imp_prev30</code>.
+          This is a proxy &mdash; computable at decision time, correlates with pages requiring intervention,
+          and does not leak future information when features are constructed from the closed Jan 30 &ndash; Feb 28
+          window.
+        </p>
+        <p>Whole-frame decline rate: <strong>~25%</strong>. This is the floor every ranked system must beat.</p>
+
+        <h3>Features (5, all pre-decision)</h3>
+        <div class="tablewrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th class="mono">Feature</th>
+                <th>Meaning</th>
+                <th>Why it's safe</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">log_imp_prev30</td>
+                <td>Log-scaled impressions in the feature window</td>
+                <td>Computed from Jan 30 &ndash; Feb 28 only; <em>denominator</em> of the label &mdash; noted as
+                  label-cousin</td>
+              </tr>
+              <tr>
+                <td class="mono">log_clk_prev30</td>
+                <td>Log-scaled clicks in the feature window</td>
+                <td>Same window; click/impression ratio tested for leakage in w06</td>
+              </tr>
+              <tr>
+                <td class="mono">pos_prev30</td>
+                <td>Average GSC position in the feature window; 0 = no data</td>
+                <td>Pre-decision; missing filled as 0 (documented)</td>
+              </tr>
+              <tr>
+                <td class="mono">days_with_imp_prev30</td>
+                <td>Active days (&ge;1 impression) in 30-day window &mdash; consistency signal</td>
+                <td>Pre-decision; no future information</td>
+              </tr>
+              <tr>
+                <td class="mono">content_age_days</td>
+                <td>Days since publication as of March 1 2026</td>
+                <td>Computed from <code>content_created_date</code>, knowable at decision moment</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Models compared</h3>
+        <ul class="plain">
+          <li><strong>Frozen rule (baseline):</strong> <em>stale_but_visible</em> &mdash; age &ge; 90d AND impressions
+            &ge; 500 &rarr; score = <code>imp_prev30</code>. Human-readable. The bar to beat.</li>
+          <li><strong>Logistic Regression:</strong> Readable weights, one per feature. Failed to beat the rule (mean
+            P@50 &asymp; 0.15).</li>
+          <li><strong>Depth-3 Decision Tree:</strong> Readable logic. Marginal improvement over the rule (mean P@50
+            &asymp; 0.42).</li>
+          <li><strong>Random Forest (300 trees, min_samples_leaf=5):</strong> Best same-window P@50 &asymp; 0.67.
+            Collapses under time-aware validation.</li>
+        </ul>
+
+        <h3>Validation protocols</h3>
+        <div class="callout">
+          <span class="ctitle">Protocol 1 &mdash; Client-grouped cross-validation (same window)</span>
+          <p>Five deterministic hash folds: every client sits on exactly one side. Train on four folds, evaluate on the
+            fifth. Same K, same tie policy, same test rows as the frozen baseline. This is the <em>fairest</em>
+            same-window test &mdash; but it still trains and tests in the same calendar period.</p>
+        </div>
+        <div class="callout warn">
+          <span class="ctitle">Protocol 2 &mdash; Time-aware walk-forward (the audit that matters)</span>
+          <p>Train on Dec&ndash;Jan features (label = Jan&ndash;Feb impressions); test on the March frame. This is the
+            realistic deployment scenario: the model is asked to rank pages it has never seen, in a month it has never
+            been trained on. This is where performance collapsed.</p>
+        </div>
+      </section>
+
+      <section id="s4">
+        <div class="sec-head">
+          <span class="sec-num">04</span>
+          <span class="sec-tag">Section</span>
+        </div>
+        <h2>Results</h2>
+        <p class="lead">The same-window win is real. It does not survive a forward leap in time.</p>
+
+        <div class="tablewrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>Protocol</th>
+                <th class="mono">Base rate</th>
+                <th class="mono">Rule P@50</th>
+                <th class="mono">Forest P@50</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="base">
+                <td>Random selection (base rate)</td>
+                <td class="mono">0.25</td>
+                <td class="mono">&mdash;</td>
+                <td class="mono">&mdash;</td>
+              </tr>
+              <tr>
+                <td>Same-window, held-out clients (mean of 5 folds)</td>
+                <td class="mono">0.25</td>
+                <td class="mono">0.38</td>
+                <td class="mono"><strong>0.67</strong></td>
+              </tr>
+              <tr class="highlight">
+                <td>Time-aware, held-out clients &mdash; mean fold</td>
+                <td class="mono">0.25</td>
+                <td class="mono">&mdash;</td>
+                <td class="mono">0.36</td>
+              </tr>
+              <tr class="highlight">
+                <td>Time-aware, pooled across all clients</td>
+                <td class="mono">0.25</td>
+                <td class="mono">&mdash;</td>
+                <td class="mono"><strong style="color:var(--crimson)">0.16</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout warn">
+          <span class="ctitle">The key finding</span>
+          <p>The Random Forest ranked 4 of 5 held-out-client folds above the rule in the same window. Under the
+            time-aware protocol the mean fold fell to 0.36 and the pooled score to 0.16 &mdash; <strong>below
+              random</strong>. Shipped blind across all clients next month, the ranking would underperform random
+            selection. Human verification is not optional garnish; it is what makes the queue useful.</p>
+        </div>
+
+        <h3>Why the model collapsed</h3>
+        <ul class="plain">
+          <li>Search traffic is <strong>mean-reverting</strong>: pages that dipped in Feb often bounced in March
+            regardless of their features.</li>
+          <li><strong>Correlation sign flip:</strong> the relationship between <code>log_clk_prev30</code> and the label
+            flips sign between the Dec&ndash;Jan training window and the March test window &mdash; confirmed in code.
+          </li>
+          <li><strong>Fold variance is huge</strong> (time-aware folds ranged 0.06 &rarr; 1.00): some clients' queues
+            are near-useless; the average hides the spread.</li>
+          <li><strong>Label-cousin proximity:</strong> <code>log_imp_prev30</code> is the label's own denominator. A
+            cousin-free forest (position, age, active days only) shrank the lead but did not reverse it &mdash; the
+            signal is real but partly structural.</li>
+        </ul>
+      </section>
+
+      <section id="s5">
+        <div class="sec-head">
+          <span class="sec-num">05</span>
+          <span class="sec-tag">Section</span>
+        </div>
+        <h2>Limitations</h2>
+
+        <ul class="claims">
+          <li><b>C1 &mdash; Time-aware collapse</b> The model's forward validity is not established. Same-window P@50
+            0.67 collapses to pooled 0.16 under a time-aware split. The ranking is decision-support for the current
+            period, not a forward predictor.</li>
+          <li><b>C2 &mdash; No causality</b> This is observational data. Association between age/impressions and the
+            decline label does not imply that refreshing a page will reverse the decline. No experiment, no causal
+            design.</li>
+          <li><b>C3 &mdash; Proxy label</b> <code>is_declining</code> is a 30-day impression ratio. Pages near the 80%
+            threshold flip label over noise; seasonal dips look like decay. The label is a triage signal, not ground
+            truth about content quality.</li>
+          <li><b>C4 &mdash; One portfolio, pseudonymized</b> Findings are observed in this dataset only. Hash IDs carry
+            no meaning &mdash; a human must open the actual page before acting.</li>
+          <li><b>C5 &mdash; Window instability</b> Feature&ndash;label correlations change direction between calendar
+            windows. The queue's signal is local to the training period.</li>
+          <li><b>C6 &mdash; Sealed final month</b> The last month of the warehouse stays out of any development loop. It
+            is an untouched holdout.</li>
+        </ul>
+      </section>
+
+      <section id="s6">
+        <div class="sec-head">
+          <span class="sec-num">06</span>
+          <span class="sec-tag">Section</span>
+        </div>
+        <h2>Action Playbook</h2>
+        <p class="lead">Because the model does not transfer forward, the deployed product is the transparent rule
+          &mdash; with a structured human layer on top.</p>
+
+        <h3>Seven archetypes &rarr; one action each</h3>
+        <p>Priority is first-match-wins down the table. Every page gets exactly one archetype and one action.</p>
+
+        <div class="tablewrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Archetype</th>
+                <th>Action</th>
+                <th class="mono">Reason code</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">1</td>
+                <td><strong>thin_history</strong> &mdash; &lt;15 active days</td>
+                <td>wait_for_history</td>
+                <td class="mono">THIN_HISTORY</td>
+                <td>Momentum signals mislead on thin history; no-go N4 enforced in code</td>
+              </tr>
+              <tr>
+                <td class="mono">2</td>
+                <td><strong>fragile_snippet</strong> &mdash; imp &ge; 500, CTR &lt; 0.1%</td>
+                <td>rewrite_snippet</td>
+                <td class="mono">LOW_CTR</td>
+                <td>High-impression zero-click pages flagged in the w05 error analysis</td>
+              </tr>
+              <tr>
+                <td class="mono">3</td>
+                <td><strong>aged_workhorse</strong> &mdash; age &ge; 365d AND imp &ge; 5,000</td>
+                <td>full_refresh_first</td>
+                <td class="mono">STALE_BIG_TRAFFIC</td>
+                <td>High traffic at stake; staleness confirmed as triage signal (w04)</td>
+              </tr>
+              <tr class="highlight">
+                <td class="mono">4</td>
+                <td><strong>stale_performer</strong> &mdash; age &ge; 90d AND imp &ge; 500</td>
+                <td>refresh_review</td>
+                <td class="mono">STALE_VISIBLE</td>
+                <td>The core validated case of the frozen baseline (P@K receipts)</td>
+              </tr>
+              <tr>
+                <td class="mono">5</td>
+                <td><strong>young_earner</strong> &mdash; age &lt; 90d AND imp &ge; 500</td>
+                <td>monitor_growth</td>
+                <td class="mono">NEW_WITH_TRAFFIC</td>
+                <td>Young pages mostly grow; intervention premature</td>
+              </tr>
+              <tr>
+                <td class="mono">6</td>
+                <td><strong>quiet_stale</strong> &mdash; stale, imp &lt; 500</td>
+                <td>no_action</td>
+                <td class="mono">LOW_VOLUME</td>
+                <td>Nothing meaningful at stake to recover</td>
+              </tr>
+              <tr>
+                <td class="mono">7</td>
+                <td><strong>small_dormant</strong> &mdash; everything else</td>
+                <td>no_action</td>
+                <td class="mono">SMALL_NO_STAKE</td>
+                <td>Nothing meaningful at stake</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Sample queue (top 5 &middot; static snapshot)</h3>
+        <div class="ledger">
+          <span class="lhd">Act-now tier &middot; ranked by traffic at stake &middot; generated from w07 receipt</span>
+          <table>
+            <tbody>
+              <tr>
+                <td>#1</td>
+                <td class="mono">aged_workhorse</td>
+                <td>full_refresh_first</td>
+                <td>STALE_BIG_TRAFFIC &middot; age 412d &middot; imp 18,240</td>
+              </tr>
+              <tr>
+                <td>#2</td>
+                <td class="mono">stale_performer</td>
+                <td>refresh_review</td>
+                <td>STALE_VISIBLE &middot; age 183d &middot; imp 12,770</td>
+              </tr>
+              <tr>
+                <td>#3</td>
+                <td class="mono">fragile_snippet</td>
+                <td>rewrite_snippet</td>
+                <td>LOW_CTR &middot; CTR 0.04% &middot; imp 9,850</td>
+              </tr>
+              <tr>
+                <td>#4</td>
+                <td class="mono">stale_performer</td>
+                <td>refresh_review</td>
+                <td>STALE_VISIBLE &middot; age 221d &middot; imp 8,100</td>
+              </tr>
+              <tr>
+                <td>#5</td>
+                <td class="mono">aged_workhorse</td>
+                <td>full_refresh_first</td>
+                <td>STALE_BIG_TRAFFIC &middot; age 580d &middot; imp 7,300</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>No-go list</h3>
+        <div class="tablewrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Never automate</th>
+                <th>Why</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">N1</td>
+                <td>Publishing or rewriting content from scores</td>
+                <td>Pooled P@50 0.16 &lt; random; errors would ship at scale</td>
+              </tr>
+              <tr>
+                <td class="mono">N2</td>
+                <td>Client-facing claims ("we predict declines")</td>
+                <td>This ranks pages for review; it predicts nothing causally</td>
+              </tr>
+              <tr>
+                <td class="mono">N3</td>
+                <td>Acting on any bucket with n &lt; 30</td>
+                <td>Small-n results are unreliable</td>
+              </tr>
+              <tr>
+                <td class="mono">N4</td>
+                <td>Scoring thin-history pages into actions</td>
+                <td>Enforced structurally by archetype #1; re-verified in code</td>
+              </tr>
+              <tr>
+                <td class="mono">N5</td>
+                <td>Tuning against March or the final month</td>
+                <td>Sealed test windows &mdash; tuning manufactures accuracy</td>
+              </tr>
+              <tr>
+                <td class="mono">N6</td>
+                <td>Bulk execution without per-batch sign-off</td>
+                <td>One named reviewer owns each batch and its verdict log</td>
+              </tr>
+              <tr>
+                <td class="mono">N7</td>
+                <td>Putting this notebook on a scheduler</td>
+                <td>Research decision-support; productionizing needs the retrain gate first</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="s7">
+        <div class="sec-head">
+          <span class="sec-num">07</span>
+          <span class="sec-tag">Section</span>
+        </div>
+        <h2>Monitoring &amp; Retrain Policy</h2>
+        <p class="lead">The queue expires on a clock. Every trigger is checked before a fresh queue ships &mdash; never
+          after.</p>
+
+        <div class="tablewrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Trigger</th>
+                <th>Metric</th>
+                <th>Threshold</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">M1</td>
+                <td>Queue age</td>
+                <td>Days since feature snapshot</td>
+                <td>&gt; 45 days</td>
+                <td>Re-pull features, rescore, re-audit before shipping</td>
+              </tr>
+              <tr>
+                <td class="mono">M2</td>
+                <td>Ranking health</td>
+                <td>Precision over human verdicts, rolling 3 batches</td>
+                <td>&lt; 0.25 base rate</td>
+                <td>Halt queues; investigate</td>
+              </tr>
+              <tr class="highlight">
+                <td class="mono">M3</td>
+                <td>Window instability</td>
+                <td>Time+grouped mean fold P@50</td>
+                <td>&lt; 0.30 or any fold &lt; 0.10</td>
+                <td>Retrain + full audit &mdash; <strong>already fired on W6 window</strong></td>
+              </tr>
+              <tr>
+                <td class="mono">M4</td>
+                <td>Portfolio drift</td>
+                <td>Share of stale_but_visible pages</td>
+                <td>Shift &gt; &plusmn;10 pp</td>
+                <td>Audit for data drift or pipeline break</td>
+              </tr>
+              <tr>
+                <td class="mono">M5</td>
+                <td>Data contract</td>
+                <td>Warehouse schema / availability flags</td>
+                <td>Any change</td>
+                <td>Rebuild features from scratch; old receipts are void</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout warn">
+          <span class="ctitle">M3 has already fired</span>
+          <p>The time-aware walk-forward audit (w06) produced a minimum fold P@50 of 0.06, triggering M3. This is why
+            the playbook ships decision-support only, with per-batch human sign-off, and why any future model update
+            must clear a fresh time+grouped audit before any queue ships.</p>
+        </div>
+
+        <h3>Retrain policy</h3>
+        <ul class="plain">
+          <li>Retrain only when M3 or M5 fires, OR when &ge; 2 new labeled months exist.</li>
+          <li>Train on the newest closed months, <strong>excluding</strong> the sealed final month.</li>
+          <li>A time+grouped audit must show mean fold P@50 &ge; 0.30 before any queue ships.</li>
+          <li>A named human reviewer signs off before each batch.</li>
+        </ul>
+      </section>
+
+      <section id="s8">
+        <div class="sec-head">
+          <span class="sec-num">08</span>
+          <span class="sec-tag">Section</span>
+        </div>
+        <h2>Reproducibility</h2>
+        <p class="lead">Every number in this paper traces to a committed receipt file or a re-runnable notebook.</p>
+
+        <div class="tablewrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>Claim / figure</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Frozen baseline P@K, all folds</td>
+                <td class="mono">work/outputs/baseline_folds_receipt.json &larr; w04</td>
+              </tr>
+              <tr>
+                <td>Model vs baseline P@K, all folds</td>
+                <td class="mono">work/outputs/model_vs_baseline_folds.json &larr; w05</td>
+              </tr>
+              <tr>
+                <td>Time-aware P@50, correlation flips, M3 status</td>
+                <td class="mono">work/outputs/w06_validation_audit_receipt.json &larr; w06</td>
+              </tr>
+              <tr>
+                <td>Archetype counts, queue stats, monitoring thresholds</td>
+                <td class="mono">work/outputs/w07_playbook_receipt.json &larr; w07</td>
+              </tr>
+              <tr>
+                <td>Feature importance chart</td>
+                <td class="mono">outputs/feature_importance.png &larr; capstone.ipynb</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><strong>Run order:</strong> <code>w03 &rarr; w04 &rarr; w05 &rarr; w06 &rarr; w07 &rarr; capstone</code>.
+          Each notebook writes receipts that the next one reads. The full pipeline runs in ~10 minutes on a free Colab
+          GPU.</p>
+
+        <div class="callout">
+          <span class="ctitle">Data access</span>
+          <p>The warehouse requires a free HuggingFace READ token. Request gate access once (instant approval). Set
+            <code>HF_TOKEN</code> as a Colab Secret or environment variable. Never paste in a cell &mdash; this is a
+            public repo.
+          </p>
+        </div>
+
+        <h3>Acknowledgments</h3>
+        <p>Built on the FlyRank ML Internship dataset. All data is pseudonymized &mdash; no client names, page URLs, or
+          raw queries appear anywhere in this codebase. Hash IDs only.</p>
+      </section>
+
+    </main>
   </div>
-  <div class="bar-row">
-    <span class="bar-label">baseline rule</span>
-    <div class="bar-track"><div class="bar-fill baseline" style="width:32%"></div></div>
-    <span class="bar-val">0.32</span>
-  </div>
-  <div class="bar-row">
-    <span class="bar-label">naive base rate</span>
-    <div class="bar-track"><div class="bar-fill naive" style="width:57%"></div></div>
-    <span class="bar-val">0.57</span>
-  </div>
-</div>
 
-<div class="callout warn">
-<b>Reading this honestly</b>
-The model clears the hand-written rule by 16 points, but sits 9 points under simply guessing the majority class. That gap is the headline result of this capstone, not a footnote — see §05 for why.
-</div>
-</section>
-
-    <section id="limits">
-<span class="sec-num">§05</span>
-<h2>Limitations &amp; honest framing</h2>
-<p>No Causality: This is cross-sectional data. We observed associations between age and traffic drops, but cannot claim that refreshing a page strictly causes traffic to return.</p><p>Data Blindspots: A recorded avg_position = 0 means "no data," not rank zero. Additionally, glossary or definitional pages may be flagged as decaying simply due to age, requiring human oversight.</p>
-</section>
-
-    <section id="reco">
-<span class="sec-num">§06</span>
-<h2>Ranked recommendations</h2>
-<p>The model ranks content into a review queue using the following reason codes: Code A (High Priority): Probability &gt; 0.70 &amp; Impressions &gt; 1000. Review for immediate rewrite.</p><p>Code B (Monitor): Probability &gt; 0.50. Monitor trailing metrics.</p><p>Code C (Low Priority): Probability &lt; 0.50. Maintain as is.</p>
-
-<div class="ledger">
-  <div class="ledger-head">
-    <span>Rank</span><span>Content ID</span><span>Reason</span><span>Gap</span><span>Action</span>
-  </div>
-  <div class="ledger-row"><span class="rank-badge">01</span><span class="hash">content_44f34c…</span><span class="reason-pill">Code A</span><div class="gapbar-wrap"><div class="gapbar-track"><div class="gapbar-fill" style="width:100%"></div></div><span class="gap-val">High</span></div><span class="action-dot"><span class="dot"></span>immediate rewrite</span></div>
-  <div class="ledger-row"><span class="rank-badge">02</span><span class="hash">content_8e1334…</span><span class="reason-pill">Code B</span><div class="gapbar-wrap"><div class="gapbar-track"><div class="gapbar-fill" style="width:60%"></div></div><span class="gap-val">Med</span></div><span class="action-dot"><span class="dot monitor"></span>monitor</span></div>
-  <div class="ledger-row"><span class="rank-badge">03</span><span class="hash">content_d61fc3…</span><span class="reason-pill">Code C</span><div class="gapbar-wrap"><div class="gapbar-track"><div class="gapbar-fill" style="width:20%"></div></div><span class="gap-val">Low</span></div><span class="action-dot"><span class="dot" style="background:var(--ink-soft)"></span>maintain</span></div>
-</div>
-</section>
-
-    <section id="repro">
-<span class="sec-num">§07</span>
-<h2>Reproducibility</h2>
-<p>All code, feature engineering logic, and validation splits are fully documented and reproducible.</p>
-<ul class="plain">
-<li><b>Random seeds</b>: <span class="mono">random_state=42</span> fixed in all <span class="mono">GroupShuffleSplit</span> and <span class="mono">RandomForestClassifier</span> calls</li>
-<li><b>Library versions</b>: scikit-learn (RandomForestClassifier, GroupShuffleSplit), pandas, numpy</li>
-<li><b>Data</b>: Starter CSV (<span class="mono">data/raw/content_refresh_anonymized.csv</span>), 30,000 rows x 44 columns</li>
-<li><b>How to rerun</b>: <span class="mono">pip install -r requirements.txt</span> then <span class="mono">python scripts/run_all.py</span>, or open the notebook in Colab and Runtime &gt; Run all</li>
-<li><b>Repository</b>: <a href="https://github.com/Basil-Maqbool/flyrank-internship-assignment1">github.com/Basil-Maqbool/flyrank-internship-assignment1</a></li>
-</ul>
-</section>
-
-    <section id="ack" style="border-bottom:none;">
-<span class="sec-num">§08</span>
-<h2>Acknowledgments &amp; data credit</h2>
-<p>Built on the FlyRank ML Internship dataset. Find out more at <a href="https://flyrank.ai">flyrank.ai</a>.</p>
-
-<h3>Demo outline (5-minute presentation)</h3>
-<p><b>Question:</b> How do we stop guessing which web pages are decaying and use data to prioritize high-value content refreshes?</p>
-<p><b>Method:</b> I trained a Random Forest classifier on historical engagement metrics, specifically using a strict grouped validation split by client to prevent the model from cheating via memorization.</p>
-<p><b>One chart:</b> I will present the Feature Importance chart, demonstrating that trailing 90-day impressions are the strongest indicator of future decay.</p>
-<p><b>One honest result:</b> The model achieved a measured out-of-group Precision@50 of 0.48. While it offers directional improvement over static baseline rules, I will transparently show how it compares to the naive base rate (0.57) and why precision drops when tested on unseen clients.</p>
-<p><b>One recommendation:</b> I will walk through the action playbook, showing how the model's high-priority reason codes provide decision-support for content teams to manually review and refresh specific pages rather than executing unsupervised automated updates.</p>
-
-<h3>Social post</h3>
-<p>Most content decay models look incredibly accurate — until you test them on unseen clients. For my capstone project, I audited a predictive Random Forest model built on 79M rows of real production search data and discovered a significant precision drop caused by hidden group leakage. By enforcing a strict grouped validation split, I rebuilt the pipeline to provide honest, directional decision-support for content refreshes rather than fake perfection. Check out the full methodology and feature importance breakdown in my live paper.</p>
-
-<h3>Employer-oriented summary</h3>
-<p>During my machine learning internship at FlyRank AI, I built a Random Forest classifier to predict web traffic decay and prioritize content refreshes. I trained and rigorously validated the model using a real-world, cross-sectional dataset of ~30,000 pseudonymized content items, implementing grouped splits to eliminate client data leakage. The resulting decision-support playbook successfully flags high-value decaying pages, delivering measured, directional guidance for SEO teams that outperforms static baseline rules.</p>
-</section>
-
-    <footer>
-      <p>Basil Maqbool · BS Computer Science · FlyRank ML/AI Internship, Machine Learning track</p>
-      <a class="repo-link" href="https://github.com/Basil-Maqbool/flyrank-internship-assignment1" target="_blank" rel="noopener">↗ View full repository on GitHub</a>
-    </footer>
-
-  </main>
-</div>
+  <footer>
+    <div class="foot-inner">
+      <span>FlyRank ML Internship &middot; Basil Maqbool &middot; 2026</span>
+      <span>Dataset: FlyRank/internship-warehouse (HuggingFace, gated)</span>
+      <span>Notebooks: <a href="https://github.com/Basil-Maqbool/flyrank-internship-assignment1"
+          style="color:inherit">github.com/Basil-Maqbool/flyrank-internship-assignment1</a></span>
+      <span>License: MIT (code only &mdash; data governed by DATA_USE.md)</span>
+    </div>
+  </footer>
 
 </body>
+
 </html>

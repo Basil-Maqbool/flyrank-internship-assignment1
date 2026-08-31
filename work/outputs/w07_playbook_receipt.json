@@ -1,0 +1,52 @@
+{
+  "queue_size": 81521,
+  "archetype_counts": {
+    "low_risk": 75576,
+    "high_risk": 4094,
+    "aged_workhorse": 1353,
+    "young_earner": 259,
+    "fragile_snippet": 239
+  },
+  "top5": [
+    {
+      "playbook_rank": 1,
+      "content_hash_id": "content_8e1334d6356668e3",
+      "archetype": "aged_workhorse",
+      "reason_code": "stale_but_visible"
+    },
+    {
+      "playbook_rank": 2,
+      "content_hash_id": "content_fec55986a1868d62",
+      "archetype": "aged_workhorse",
+      "reason_code": "stale_but_visible"
+    },
+    {
+      "playbook_rank": 3,
+      "content_hash_id": "content_9c057b66c30a3abb",
+      "archetype": "high_risk",
+      "reason_code": "stale_but_visible"
+    },
+    {
+      "playbook_rank": 4,
+      "content_hash_id": "content_512dbad65bd5ade9",
+      "archetype": "low_risk",
+      "reason_code": "stale_but_visible"
+    },
+    {
+      "playbook_rank": 5,
+      "content_hash_id": "content_e241d6415ac9e534",
+      "archetype": "aged_workhorse",
+      "reason_code": "stale_but_visible"
+    }
+  ],
+  "no_go_policies": [
+    "No auto-publishing \u2014 every action requires human approval",
+    "No causal guarantees \u2014 refreshing may not reverse the decline",
+    "No actions on pages with fewer than 15 active days in the feature window"
+  ],
+  "monitoring_triggers": {
+    "M1": "Queue regeneration required if older than 45 days",
+    "M2": "Halt if human editor acceptance rate drops below 25%",
+    "M3": "Trigger audit if time-aware fold P@50 drops below 0.30 (already fired in W6)"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "train_window": "2025-11-30 to 2026-01-30 (Dec-Jan features, Jan-Feb label)",
+  "test_window": "March 2026 (same frame as w04/w05)",
+  "folds": [
+    {
+      "fold": 0,
+      "n_test": 25520,
+      "train_n": 49349,
+      "base_rate": 0.2153,
+      "time_aware_precision@20": 0.2,
+      "time_aware_precision@50": 0.16,
+      "time_aware_precision@100": 0.17
+    },
+    {
+      "fold": 1,
+      "n_test": 4276,
+      "train_n": 69423,
+      "base_rate": 0.1284,
+      "time_aware_precision@20": 0.0,
+      "time_aware_precision@50": 0.02,
+      "time_aware_precision@100": 0.08
+    },
+    {
+      "fold": 2,
+      "n_test": 6675,
+      "train_n": 64402,
+      "base_rate": 0.6649,
+      "time_aware_precision@20": 0.25,
+      "time_aware_precision@50": 0.52,
+      "time_aware_precision@100": 0.66
+    },
+    {
+      "fold": 3,
+      "n_test": 16084,
+      "train_n": 56331,
+      "base_rate": 0.2743,
+      "time_aware_precision@20": 0.3,
+      "time_aware_precision@50": 0.4,
+      "time_aware_precision@100": 0.35
+    },
+    {
+      "fold": 4,
+      "n_test": 28966,
+      "train_n": 45911,
+      "base_rate": 0.1859,
+      "time_aware_precision@20": 0.25,
+      "time_aware_precision@50": 0.14,
+      "time_aware_precision@100": 0.16
+    }
+  ],
+  "mean_precision@50_time_aware": 0.248
+}
