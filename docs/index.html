@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prioritizing Content Refresh: A Machine Learning Approach to Detecting Search Performance Decay</title>
   <meta name="description"
-    content="A decline-triage ranking on 78.8M rows of pseudonymized search data. A Random Forest achieved 0.67 same-window P@50 but collapsed to 0.36 under time-aware validation. The deployed playbook ships the transparent rule with structural human review.">
+    content="A decline-triage ranking on 78.8M rows of pseudonymized search data. A Random Forest achieved 0.67 same-window P@50 but collapsed to 0.26 (no better than random) under time-aware validation. The deployed playbook ships the transparent rule with structural human review.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -959,13 +959,13 @@
 
       <div class="resultcard">
         <div class="cell">
-          <div class="big">0.68<span class="arrow">&rarr;</span>0.16</div>
-          <div class="small">same-window P@50 &rarr; time-aware pooled<br>the win does not survive a forward leap</div>
+          <div class="big">0.67<span class="arrow">&rarr;</span>0.26</div>
+          <div class="small">same-window P@50 &rarr; time-aware mean fold<br>the win does not survive a forward leap</div>
         </div>
         <div class="cell">
-          <div class="big">~1.4&times;</div>
-          <div class="small">honest lift: time-aware mean fold P@50 0.36<br>vs base rate 0.25 &mdash; ~18 of top-50
-            found vs ~12</div>
+          <div class="big">4 / 5</div>
+          <div class="small">time-aware folds below their own base rate<br>no forward lift: mean fold 0.26 vs base
+            rate 0.25</div>
         </div>
       </div>
 
@@ -973,22 +973,24 @@
         <span class="abs-head">Abstract</span>
         <p>
           We built a decline-triage ranking system to help content editors prioritize which web pages to review first.
-          Using 78.8&thinsp;M rows of pseudonymized GSC and GA4 data across 104 clients, we constructed a feature table
+          Using 78.8&thinsp;M rows of pseudonymized GSC and GA4 data (81,521 pages scored across 37 eligible
+          clients), we constructed a feature table
           of five pre-decision signals (log impressions, log clicks, average position, active-day count, content age)
           and defined a proxy label: a page is <em>declining</em> if March impressions fell more than 20% below the
           prior 30-day window.
         </p>
         <p>
-          Across five client-grouped held-out folds, a Random Forest reached mean P@50 of <strong>0.68</strong>
+          Across five client-grouped held-out folds, a Random Forest reached mean P@50 of <strong>0.67</strong>
           versus the frozen rule's <strong>0.38</strong> and the base rate of <strong>0.25</strong> &mdash; a clear
           same-window win. A time-aware walk-forward protocol (train Dec&ndash;Jan, test March) collapsed that to a mean
-          fold of <strong>0.36</strong> and a pooled score of <strong>0.16</strong> &mdash; below random. The ranking
+          fold of <strong>0.26</strong> &mdash; indistinguishable from random, with 4 of 5 folds below their own base
+          rate. The ranking
           overfits to local volatility, not durable decay patterns.
         </p>
         <p>
           The shipped product is the transparent rule &mdash; <em>stale but visible</em> pages ranked by traffic at
           stake &mdash;
-          paired with a seven-archetype human-review playbook and five monitoring triggers.
+          paired with a five-archetype human-review playbook and three monitoring triggers.
           Decision-support, not automation. Predictive, not causal.
         </p>
       </div>
@@ -1060,7 +1062,8 @@
           <span class="ctitle">Careful words &mdash; what this work cannot claim</span>
           <p>Refreshing a recommended page does not <em>cause</em> recovery &mdash; no experiment, no causal design. The
             model does not predict Google's algorithm. The label is a proxy computed from the current window, not a true
-            forward outcome. Results on the 30k-row starter slice require re-validation on the full 79M-row warehouse.
+            forward outcome. Early exploration (w01&ndash;w02) used the 30k-row starter slice; all deployed numbers here
+            come from the full 78.8M-row warehouse.
           </p>
         </div>
       </section>
@@ -1123,7 +1126,8 @@
           <li><strong>Label window:</strong> March 2026 &mdash; impressions vs prior 30-day baseline</li>
           <li><strong>Eligibility:</strong> <code>gsc_data_available IS TRUE</code> AND <code>imp_prev30 &ge; 100</code>
           </li>
-          <li><strong>Pages scored:</strong> 81,521 across 104 clients</li>
+          <li><strong>Pages scored:</strong> 81,521 across 37 eligible clients (the warehouse lists 104; eligibility
+            filtering removes the rest)</li>
           <li><strong>Known panel warnings:</strong> GA4 columns are zero-filled (not zero) before each client's
             <code>ga4_data_start</code>; filtered on the flag. History depth varies wildly per client.
           </li>
@@ -1242,21 +1246,15 @@
               </tr>
               <tr>
                 <td>Same-window, held-out clients (mean of 5 folds)</td>
-                <td class="mono">0.25</td>
+                <td class="mono">0.29</td>
                 <td class="mono">0.38</td>
                 <td class="mono"><strong>0.67</strong></td>
               </tr>
               <tr class="highlight">
                 <td>Time-aware, held-out clients &mdash; mean fold</td>
-                <td class="mono">0.25</td>
+                <td class="mono">0.29</td>
                 <td class="mono">&mdash;</td>
-                <td class="mono">0.36</td>
-              </tr>
-              <tr class="highlight">
-                <td>Time-aware, pooled across all clients</td>
-                <td class="mono">0.25</td>
-                <td class="mono">&mdash;</td>
-                <td class="mono"><strong style="color:var(--crimson)">0.16</strong></td>
+                <td class="mono"><strong style="color:var(--crimson)">0.26</strong></td>
               </tr>
             </tbody>
           </table>
@@ -1265,9 +1263,10 @@
         <div class="callout warn">
           <span class="ctitle">The key finding</span>
           <p>The Random Forest ranked 4 of 5 held-out-client folds above the rule in the same window. Under the
-            time-aware protocol the mean fold fell to 0.36 and the pooled score to 0.16 &mdash; <strong>below
-              random</strong>. Shipped blind across all clients next month, the ranking would underperform random
-            selection. Human verification is not optional garnish; it is what makes the queue useful.</p>
+            time-aware protocol the mean fold fell to 0.26 &mdash; <strong>indistinguishable from random</strong>, with
+            4 of 5 folds below their own base rate. Shipped blind across all clients next month, the ranking would offer
+            no advantage over random selection. Human verification is not optional garnish; it is what makes the queue
+            useful.</p>
         </div>
 
         <h3>Why the model collapsed</h3>
@@ -1277,7 +1276,8 @@
           <li><strong>Correlation sign flip:</strong> the relationship between <code>log_clk_prev30</code> and the label
             flips sign between the Dec&ndash;Jan training window and the March test window &mdash; confirmed in code.
           </li>
-          <li><strong>Fold variance is huge</strong> (time-aware folds ranged 0.06 &rarr; 1.00): some clients' queues
+          <li><strong>Fold variance is huge</strong> (time-aware fold P@50 ranged 0.04 &rarr; 0.56; same-window forest
+            folds ranged 0.26 &rarr; 1.00): some clients' queues
             are near-useless; the average hides the spread.</li>
           <li><strong>Label-cousin proximity:</strong> <code>log_imp_prev30</code> is the label's own denominator. A
             cousin-free forest (position, age, active days only) shrank the lead but did not reverse it &mdash; the
@@ -1294,7 +1294,8 @@
 
         <ul class="claims">
           <li><b>C1 &mdash; Time-aware collapse</b> The model's forward validity is not established. Same-window P@50
-            0.67 collapses to pooled 0.16 under a time-aware split. The ranking is decision-support for the current
+            0.67 collapses to 0.26 mean fold under a time-aware split &mdash; no better than random. The ranking is
+            decision-support for the current
             period, not a forward predictor.</li>
           <li><b>C2 &mdash; No causality</b> This is observational data. Association between age/impressions and the
             decline label does not imply that refreshing a page will reverse the decline. No experiment, no causal
@@ -1320,8 +1321,10 @@
         <p class="lead">Because the model does not transfer forward, the deployed product is the transparent rule
           &mdash; with a structured human layer on top.</p>
 
-        <h3>Seven archetypes &rarr; one action each</h3>
-        <p>Priority is first-match-wins down the table. Every page gets exactly one archetype and one action.</p>
+        <h3>Five archetypes &rarr; one action each</h3>
+        <p>Priority is first-match-wins down the table. Every page gets exactly one archetype and one action. Row-level
+          reason codes (<code>stale_but_visible</code>, <code>not_stale</code>, <code>low_volume</code>) record how the
+          transparent rule scored each page. Counts come from the w07 receipt.</p>
 
         <div class="tablewrap">
           <table class="data">
@@ -1330,59 +1333,45 @@
                 <th>#</th>
                 <th>Archetype</th>
                 <th>Action</th>
-                <th class="mono">Reason code</th>
+                <th class="mono">Queue count</th>
                 <th>Evidence</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td class="mono">1</td>
-                <td><strong>thin_history</strong> &mdash; &lt;15 active days</td>
-                <td>wait_for_history</td>
-                <td class="mono">THIN_HISTORY</td>
-                <td>Momentum signals mislead on thin history; no-go N4 enforced in code</td>
+                <td><strong>aged_workhorse</strong> &mdash; age &ge; 365d AND imp &ge; 3,000</td>
+                <td>full_refresh_review</td>
+                <td class="mono">1,353</td>
+                <td>High traffic at stake on old pages; ranked first by the rule score</td>
               </tr>
               <tr>
                 <td class="mono">2</td>
-                <td><strong>fragile_snippet</strong> &mdash; imp &ge; 500, CTR &lt; 0.1%</td>
-                <td>rewrite_snippet</td>
-                <td class="mono">LOW_CTR</td>
-                <td>High-impression zero-click pages flagged in the w05 error analysis</td>
+                <td><strong>fragile_snippet</strong> &mdash; model P &gt; 0.7 AND &lt; 15 active days</td>
+                <td>rewrite_snippet_review</td>
+                <td class="mono">240</td>
+                <td>Model-flagged risk on thin history &mdash; routed to human review, never auto-actioned (no-go N4)</td>
               </tr>
               <tr>
                 <td class="mono">3</td>
-                <td><strong>aged_workhorse</strong> &mdash; age &ge; 365d AND imp &ge; 5,000</td>
-                <td>full_refresh_first</td>
-                <td class="mono">STALE_BIG_TRAFFIC</td>
-                <td>High traffic at stake; staleness confirmed as triage signal (w04)</td>
+                <td><strong>young_earner</strong> &mdash; model P &gt; 0.7 AND age &lt; 90d</td>
+                <td>monitor_growth</td>
+                <td class="mono">251</td>
+                <td>Young pages are still settling; intervention is premature</td>
+              </tr>
+              <tr>
+                <td class="mono">4</td>
+                <td><strong>high_risk</strong> &mdash; model P &gt; 0.7, everything else</td>
+                <td>manual_review_first</td>
+                <td class="mono">4,088</td>
+                <td>Model-flagged risk; review before any change</td>
               </tr>
               <tr class="highlight">
-                <td class="mono">4</td>
-                <td><strong>stale_performer</strong> &mdash; age &ge; 90d AND imp &ge; 500</td>
-                <td>refresh_review</td>
-                <td class="mono">STALE_VISIBLE</td>
-                <td>The core validated case of the frozen baseline (P@K receipts)</td>
-              </tr>
-              <tr>
                 <td class="mono">5</td>
-                <td><strong>young_earner</strong> &mdash; age &lt; 90d AND imp &ge; 500</td>
-                <td>monitor_growth</td>
-                <td class="mono">NEW_WITH_TRAFFIC</td>
-                <td>Young pages mostly grow; intervention premature</td>
-              </tr>
-              <tr>
-                <td class="mono">6</td>
-                <td><strong>quiet_stale</strong> &mdash; stale, imp &lt; 500</td>
+                <td><strong>low_risk</strong> &mdash; everything else</td>
                 <td>no_action</td>
-                <td class="mono">LOW_VOLUME</td>
-                <td>Nothing meaningful at stake to recover</td>
-              </tr>
-              <tr>
-                <td class="mono">7</td>
-                <td><strong>small_dormant</strong> &mdash; everything else</td>
-                <td>no_action</td>
-                <td class="mono">SMALL_NO_STAKE</td>
-                <td>Nothing meaningful at stake</td>
+                <td class="mono">75,589</td>
+                <td>No flag raised; leave alone</td>
               </tr>
             </tbody>
           </table>
@@ -1390,38 +1379,33 @@
 
         <h3>Sample queue (top 5 &middot; static snapshot)</h3>
         <div class="ledger">
-          <span class="lhd">Act-now tier &middot; ranked by traffic at stake &middot; generated from w07 receipt</span>
+          <span class="lhd">Act-now tier &middot; ranked by traffic at stake &middot; generated from w07 receipt (all five carry reason code stale_but_visible)</span>
           <table>
             <tbody>
               <tr>
                 <td>#1</td>
                 <td class="mono">aged_workhorse</td>
-                <td>full_refresh_first</td>
-                <td>STALE_BIG_TRAFFIC &middot; age 412d &middot; imp 18,240</td>
+                <td>content_8e1334d6356668e3 &middot; age 380d &middot; imp 204,176</td>
               </tr>
               <tr>
                 <td>#2</td>
-                <td class="mono">stale_performer</td>
-                <td>refresh_review</td>
-                <td>STALE_VISIBLE &middot; age 183d &middot; imp 12,770</td>
+                <td class="mono">aged_workhorse</td>
+                <td>content_fec55986a1868d62 &middot; age 380d &middot; imp 198,339</td>
               </tr>
               <tr>
                 <td>#3</td>
-                <td class="mono">fragile_snippet</td>
-                <td>rewrite_snippet</td>
-                <td>LOW_CTR &middot; CTR 0.04% &middot; imp 9,850</td>
+                <td class="mono">high_risk</td>
+                <td>content_9c057b66c30a3abb &middot; age 213d &middot; imp 195,655</td>
               </tr>
               <tr>
                 <td>#4</td>
-                <td class="mono">stale_performer</td>
-                <td>refresh_review</td>
-                <td>STALE_VISIBLE &middot; age 221d &middot; imp 8,100</td>
+                <td class="mono">low_risk</td>
+                <td>content_512dbad65bd5ade9 &middot; age 157d &middot; imp 178,603</td>
               </tr>
               <tr>
                 <td>#5</td>
                 <td class="mono">aged_workhorse</td>
-                <td>full_refresh_first</td>
-                <td>STALE_BIG_TRAFFIC &middot; age 580d &middot; imp 7,300</td>
+                <td>content_e241d6415ac9e534 &middot; age 382d &middot; imp 177,075</td>
               </tr>
             </tbody>
           </table>
@@ -1441,7 +1425,7 @@
               <tr>
                 <td class="mono">N1</td>
                 <td>Publishing or rewriting content from scores</td>
-                <td>Pooled P@50 0.16 &lt; random; errors would ship at scale</td>
+                <td>Time-aware mean fold P@50 0.26 &asymp; random; errors would ship at scale</td>
               </tr>
               <tr>
                 <td class="mono">N2</td>
@@ -1517,22 +1501,8 @@
                 <td class="mono">M3</td>
                 <td>Window instability</td>
                 <td>Time+grouped mean fold P@50</td>
-                <td>&lt; 0.30 or any fold &lt; 0.10</td>
+                <td>&lt; 0.30</td>
                 <td>Retrain + full audit &mdash; <strong>already fired on W6 window</strong></td>
-              </tr>
-              <tr>
-                <td class="mono">M4</td>
-                <td>Portfolio drift</td>
-                <td>Share of stale_but_visible pages</td>
-                <td>Shift &gt; &plusmn;10 pp</td>
-                <td>Audit for data drift or pipeline break</td>
-              </tr>
-              <tr>
-                <td class="mono">M5</td>
-                <td>Data contract</td>
-                <td>Warehouse schema / availability flags</td>
-                <td>Any change</td>
-                <td>Rebuild features from scratch; old receipts are void</td>
               </tr>
             </tbody>
           </table>
@@ -1540,14 +1510,14 @@
 
         <div class="callout warn">
           <span class="ctitle">M3 has already fired</span>
-          <p>The time-aware walk-forward audit (w06) produced a minimum fold P@50 of 0.06, triggering M3. This is why
+          <p>The time-aware walk-forward audit (w06) produced a minimum fold P@50 of 0.04 and a mean of 0.26, triggering M3. This is why
             the playbook ships decision-support only, with per-batch human sign-off, and why any future model update
             must clear a fresh time+grouped audit before any queue ships.</p>
         </div>
 
         <h3>Retrain policy</h3>
         <ul class="plain">
-          <li>Retrain only when M3 or M5 fires, OR when &ge; 2 new labeled months exist.</li>
+          <li>Retrain only when M3 fires, OR when &ge; 2 new labeled months exist.</li>
           <li>Train on the newest closed months, <strong>excluding</strong> the sealed final month.</li>
           <li>A time+grouped audit must show mean fold P@50 &ge; 0.30 before any queue ships.</li>
           <li>A named human reviewer signs off before each batch.</li>

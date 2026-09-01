@@ -1,11 +1,11 @@
 {
   "queue_size": 81521,
   "archetype_counts": {
-    "low_risk": 75576,
-    "high_risk": 4094,
+    "low_risk": 75589,
+    "high_risk": 4088,
     "aged_workhorse": 1353,
-    "young_earner": 259,
-    "fragile_snippet": 239
+    "young_earner": 251,
+    "fragile_snippet": 240
   },
   "top5": [
     {
